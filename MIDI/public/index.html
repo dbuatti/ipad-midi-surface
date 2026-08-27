@@ -9,8 +9,8 @@
 <title>iPad MIDI Surface</title>
 <style>
   :root {
-    --bg: #0a0c10;
-    --panel: #14181f;
+    --bg: #000000;
+    --panel: #0d1117;
     --track: #05070a;
     --accent: #00e5ff;
     --accent-dim: #0a4a55;
@@ -93,6 +93,14 @@
     touch-action: none;
   }
   .tab.active { background: var(--accent); color: #001016; }
+  .tab { position: relative; }
+  .tab .badge {
+    position: absolute; top: 4px; right: 6px;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--good); box-shadow: 0 0 6px var(--good);
+    display: none;
+  }
+  .tab.has-active .badge { display: block; }
 
   /* ---- Pager / screens ---- */
   .pager { flex: 1 1 auto; position: relative; overflow: hidden; min-height: 0; }
@@ -157,6 +165,10 @@
     text-align: center;
     line-height: 1.1;
     word-break: break-word;
+  }
+  .fader-track.eq-track::after {
+    content: ''; position: absolute; left: 0; right: 0; top: 50%;
+    height: 1px; background: rgba(255,255,255,0.3); z-index: 1;
   }
   .fader-ms { display: flex; gap: 4px; margin-top: 6px; justify-content: center; flex: 0 0 auto; }
   .ms {
@@ -231,9 +243,14 @@
   .patchpad.on { border-color: var(--good); }
   .patchpad.on .patchpad-fill { background: linear-gradient(180deg, var(--good), #0a5a30); }
   .patchpad.on .patchpad-state { color: var(--good); }
+  .patchpad.on { animation: padpulse 1.8s ease-in-out infinite; }
+  @keyframes padpulse { 0%,100% { box-shadow: 0 0 0 rgba(0,230,118,0); } 50% { box-shadow: 0 0 16px rgba(0,230,118,0.5); } }
+  .patchpad-rain { border-color: #1a3a4a; }
   .patchpad-rain.on { border-color: #4fc3f7; }
   .patchpad-rain.on .patchpad-fill { background: linear-gradient(180deg, #4fc3f7, #0a4a6a); }
   .patchpad-rain.on .patchpad-state { color: #4fc3f7; }
+  .patchpad-rain.on { animation: rainpulse 1.8s ease-in-out infinite; }
+  @keyframes rainpulse { 0%,100% { box-shadow: 0 0 0 rgba(79,195,247,0); } 50% { box-shadow: 0 0 16px rgba(79,195,247,0.5); } }
   .patchpad.dragging .patchpad-fill { transition: none; }
 
   /* ---- Panic ---- */
@@ -263,7 +280,7 @@
     <nav class="tabs">
       <button class="tab active" type="button" data-screen="0">PERFORM</button>
       <button class="tab" type="button" data-screen="1">MIX</button>
-      <button class="tab" type="button" data-screen="2">PATCH</button>
+      <button class="tab" type="button" data-screen="2">PATCH<span class="badge"></span></button>
       <button class="tab" type="button" data-screen="3">REVERB</button>
       <button class="tab" type="button" data-screen="4">EQ</button>
     </nav>
@@ -409,10 +426,10 @@
           </div>
           <div class="section-title">Gain (boost / cut)</div>
           <div class="faders" style="flex:1 1 auto;min-height:0;">
-            <div class="fader" data-cc="102"><div class="fader-value">0</div><div class="fader-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">LOW</div></div>
-            <div class="fader" data-cc="103"><div class="fader-value">0</div><div class="fader-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">LO-MID</div></div>
-            <div class="fader" data-cc="104"><div class="fader-value">0</div><div class="fader-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">HI-MID</div></div>
-            <div class="fader" data-cc="105"><div class="fader-value">0</div><div class="fader-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">HIGH</div></div>
+            <div class="fader" data-cc="102"><div class="fader-value">0%</div><div class="fader-track eq-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">LOW</div></div>
+            <div class="fader" data-cc="103"><div class="fader-value">0%</div><div class="fader-track eq-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">LO-MID</div></div>
+            <div class="fader" data-cc="104"><div class="fader-value">0%</div><div class="fader-track eq-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">HI-MID</div></div>
+            <div class="fader" data-cc="105"><div class="fader-value">0%</div><div class="fader-track eq-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">HIGH</div></div>
           </div>
           <div class="section-title">Frequency</div>
           <div class="knobs">
@@ -667,7 +684,7 @@
     var pct = (this.value / 127) * 100;
     this.fill.style.height = pct + '%';
     this.handle.style.bottom = pct + '%';
-    this.valueEl.textContent = String(this.value);
+    this.valueEl.textContent = Math.round(pct) + '%';
   };
   Fader.prototype.valueFromEvent = function (e) {
     var rect = this.track.getBoundingClientRect();
@@ -856,6 +873,14 @@
   // Drag vertically = set volume (CC). Quick tap = trigger note.
   // Toggle pads (DRONE, RAIN) latch on/off; momentary pads fire once.
   var patchPads = [];
+  function updatePatchBadge() {
+    var anyOn = false;
+    for (var i = 0; i < patchPads.length; i++) {
+      if (patchPads[i].toggle && patchPads[i].state) { anyOn = true; break; }
+    }
+    var patchTab = document.querySelector('.tab[data-screen="2"]');
+    if (patchTab) patchTab.classList.toggle('has-active', anyOn);
+  }
   function PatchPad(el) {
     this.el = el;
     this.cc = parseInt(el.getAttribute('data-cc'), 10);
@@ -883,9 +908,10 @@
   PatchPad.prototype.render = function () {
     var pct = (this.volume / 127) * 100;
     this.fill.style.height = pct + '%';
-    if (this.volEl) this.volEl.textContent = String(this.volume);
+    if (this.volEl) this.volEl.textContent = Math.round(pct) + '%';
     if (this.stateEl) this.stateEl.textContent = this.state ? 'ON' : 'OFF';
     this.el.classList.toggle('on', this.toggle && this.state);
+    updatePatchBadge();
   };
   PatchPad.prototype.volFromY = function (clientY) {
     var rect = this.el.getBoundingClientRect();
