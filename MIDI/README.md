@@ -3,6 +3,22 @@
 A wireless MIDI control surface for **MainStage 3**. It runs in **Safari on an iPad**
 and sends MIDI to a Mac over the venue's local wifi — no internet required.
 
+## Quick start (auto-launch at login — recommended)
+
+```bash
+cd ~/dyad-apps/MIDI
+cp com.danielebuatti.ipad-midi-surface.plist ~/Library/LaunchAgents/
+launchctl load ~/Library/LaunchAgents/com.danielebuatti.ipad-midi-surface.plist
+```
+
+The server now starts automatically at login and restarts if it crashes.
+To stop it: `launchctl unload ~/Library/LaunchAgents/com.danielebuatti.ipad-midi-surface.plist`
+
+Logs are written to `launchd.log` in the project folder.
+
+> **Important:** the plist hardcodes the Node path (`~/.nvm/versions/node/v24.4.1/bin/node`).
+> If you update Node via nvm, update the path in the plist and reload it.
+
 ## Why this architecture
 
 Safari on iOS does **not** support the Web MIDI API, and every browser on iPadOS is
