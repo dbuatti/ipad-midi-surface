@@ -225,22 +225,34 @@ will open Terminal and start automatically).
 
 ---
 
-## Offline fallback (Mac wifi hotspot)
+## Offline fallback (no venue wifi needed)
 
-If the venue wifi dies or has client isolation (devices can't see each other), create a
-hotspot directly from the Mac — no router needed:
+If the venue wifi is unreliable or has client isolation (devices can't see each
+other), use an **iPhone Personal Hotspot** as your own private network:
 
-1. **System Settings ▸ General ▸ Sharing ▸ Internet Sharing**
-2. Share from: **Wi-Fi** (or Ethernet if the Mac is wired)
-3. To computers using: **Wi-Fi**
-4. Click **Wi-Fi Options** → set a network name and password
-5. Toggle **Internet Sharing** ON
-6. On the iPad: join the Mac's hotspot wifi network
-7. Re-run `./start.sh` — the banner will print the Mac's hotspot IP (usually `192.168.2.x`)
-8. Open that URL on the iPad
+1. **iPhone**: Settings ▸ Personal Hotspot ▸ ON. Keep this screen open until
+   both devices have joined (iOS turns it off if nothing connects).
+2. **Mac**: join the iPhone hotspot.
+3. **iPad**: join the iPhone hotspot.
+4. Open the IP shown in the header bar (or `launchd.log`) on the iPad.
+5. **Plug the iPhone into a charger** — hotspot drains battery fast.
+6. Once connected, put the iPad in **Do Not Disturb**.
 
-The server binds to **all network interfaces**, so it works on any network the Mac is on —
-venue wifi, personal hotspot, or even a USB ethernet adapter. No code changes needed.
+The Mac and iPad are now on a private network you control. Control traffic stays
+local (no internet, no data usage). The phone is just acting as a router.
+
+**Venue wifi is worth testing, not relying on.** Arrive early, join both devices,
+and check if they can reach each other. If yes, use it and save your phone
+battery. If not, switch to the hotspot. 30-second test.
+
+**Tailscale** works as a third fallback (routing through the internet), but a
+weak venue signal or dropout would take out your faders mid-session. Local
+network beats cloud relay for live operation.
+
+**Have a wired backup plan.** If the iPad drops out mid-session, you need an
+answer that isn't "fix the network while people wait." Either keep a USB MIDI
+controller (e.g. nanoKONTROL2) plugged in, or make sure essential controls are
+reachable in MainStage's Perform mode without the iPad.
 
 ---
 
