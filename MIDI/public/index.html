@@ -71,6 +71,10 @@
   #ipBar .ip-tag { color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
   #ipBar .ip-addr { color: var(--accent); font-weight: 700; font-variant-numeric: tabular-nums; }
   #ipBar .ip-ts { color: #7c8aff; }
+  #ipBar .ip-addr { cursor: pointer; touch-action: none; }
+  #ipBar .ip-addr:active { opacity: 0.6; }
+  #ipBar .ip-copied { color: var(--good); font-size: 10px; font-weight: 800; opacity: 0; transition: opacity .2s; }
+  #ipBar .ip-copied.show { opacity: 1; }
   #reset, #allUp {
     height: 32px; padding: 0 14px;
     border-radius: 8px;
@@ -1330,9 +1334,32 @@
       var html = data.addresses.map(function (ip) {
         var isTS = ip.indexOf('100.') === 0;
         var port = location.port || '3000';
-        return '<span class="ip-addr' + (isTS ? ' ip-ts' : '') + '">' + ip + ':' + port + (isTS ? ' (Tailscale)' : '') + '</span>';
+        var url = 'http://' + ip + ':' + port;
+        return '<span class="ip-addr' + (isTS ? ' ip-ts' : '') + '" data-url="' + url + '">' + url + (isTS ? ' (Tailscale)' : '') + '</span>';
       }).join('  ·  ');
+      html += '  <span class="ip-copied" id="ipCopied">COPIED</span>';
       list.innerHTML = html;
+      // wire tap-to-copy
+      var spans = list.querySelectorAll('.ip-addr');
+      for (var i = 0; i < spans.length; i++) {
+        spans[i].addEventListener('pointerdown', function (e) {
+          e.preventDefault();
+          haptic(15);
+          var url = this.getAttribute('data-url');
+          try {
+            navigator.clipboard.writeText(url);
+          } catch (_) {
+            // fallback for older Safari
+            var ta = document.createElement('textarea');
+            ta.value = url; ta.style.position = 'fixed'; ta.style.opacity = '0';
+            document.body.appendChild(ta); ta.select();
+            try { document.execCommand('copy'); } catch (__) {}
+            document.body.removeChild(ta);
+          }
+          var copied = document.getElementById('ipCopied');
+          if (copied) { copied.classList.add('show'); clearTimeout(copied._t); copied._t = setTimeout(function () { copied.classList.remove('show'); }, 1200); }
+        });
+      }
     }).catch(function () {
       document.getElementById('ipList').textContent = 'unavailable';
     });
