@@ -55,6 +55,11 @@
   #status .label { text-transform: uppercase; }
   #status.connected .label { color: var(--good); }
   #status:not(.connected) .label { color: var(--bad); }
+  #midiBlink {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #222; flex: 0 0 auto;
+  }
+  #midiBlink.active { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
   #reset, #allUp {
     height: 32px; padding: 0 14px;
     border-radius: 8px;
@@ -253,6 +258,20 @@
   @keyframes rainpulse { 0%,100% { box-shadow: 0 0 0 rgba(79,195,247,0); } 50% { box-shadow: 0 0 16px rgba(79,195,247,0.5); } }
   .patchpad.dragging .patchpad-fill { transition: none; }
 
+  /* ---- Scenes ---- */
+  .scenes { display: flex; gap: 8px; flex: 0 0 auto; }
+  .scene {
+    flex: 1 1 0; min-height: 56px; border-radius: 10px;
+    background: #1d2530; color: var(--text);
+    border: 2px solid #000; touch-action: none;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  }
+  .scene.stored { border-color: var(--accent-dim); }
+  .scene.saving { background: var(--accent); color: #001016; animation: pulse 0.5s infinite; }
+  .scene-name { font-size: 12px; font-weight: 800; letter-spacing: 1px; }
+  .scene-id { font-size: 10px; font-weight: 700; color: var(--text-dim); }
+  .scene.stored .scene-id { color: var(--accent); }
+
   /* ---- Panic ---- */
   #panic {
     flex: 0 0 auto; width: 100%; min-height: 84px; border-radius: 14px;
@@ -271,6 +290,7 @@
   <div id="status">
     <span class="dot"></span>
     <span class="label">Connecting…</span>
+    <span id="midiBlink"></span>
     <button id="panicTop" type="button">PANIC</button>
     <button id="allUp" type="button">FADERS 100%</button>
     <button id="reset" type="button">RESET</button>
@@ -324,6 +344,13 @@
             </div>
             <div class="quad-label">Pitch springs to center · Mod holds</div>
           </div>
+          <div class="section-title">Scenes — long-press to save, tap to recall</div>
+          <div class="scenes">
+            <button class="scene" type="button" data-scene="0"><span class="scene-name">—</span><span class="scene-id">1</span></button>
+            <button class="scene" type="button" data-scene="1"><span class="scene-name">—</span><span class="scene-id">2</span></button>
+            <button class="scene" type="button" data-scene="2"><span class="scene-name">—</span><span class="scene-id">3</span></button>
+            <button class="scene" type="button" data-scene="3"><span class="scene-name">—</span><span class="scene-id">4</span></button>
+          </div>
         </section>
 
         <!-- SCREEN 1: MIX -->
@@ -356,38 +383,38 @@
         <section class="screen" id="screen-patch">
           <div class="section-title">Patches — drag to set volume · tap to trigger</div>
           <div class="patches">
-            <div class="patchpad" data-cc="80" data-note="60" data-toggle="1">
+            <button class="patchpad" type="button" data-cc="80" data-note="60" data-toggle="1">
               <div class="patchpad-fill"></div>
               <div class="patchpad-body"><span class="patchpad-name">DRONE</span><span class="patchpad-state">OFF</span></div>
-            </div>
-            <div class="patchpad patchpad-rain" data-cc="86" data-note="66" data-toggle="1">
+            </button>
+            <button class="patchpad patchpad-rain" type="button" data-cc="86" data-note="66" data-toggle="1">
               <div class="patchpad-fill"></div>
               <div class="patchpad-body"><span class="patchpad-name">RAIN</span><span class="patchpad-state">OFF</span></div>
-            </div>
-            <div class="patchpad" data-cc="81" data-note="61">
+            </button>
+            <button class="patchpad" type="button" data-cc="81" data-note="61">
               <div class="patchpad-fill"></div>
               <div class="patchpad-body"><span class="patchpad-name">B2</span><span class="patchpad-vol">0</span></div>
-            </div>
-            <div class="patchpad" data-cc="82" data-note="62">
+            </button>
+            <button class="patchpad" type="button" data-cc="82" data-note="62">
               <div class="patchpad-fill"></div>
               <div class="patchpad-body"><span class="patchpad-name">B3</span><span class="patchpad-vol">0</span></div>
-            </div>
-            <div class="patchpad" data-cc="83" data-note="63">
+            </button>
+            <button class="patchpad" type="button" data-cc="83" data-note="63">
               <div class="patchpad-fill"></div>
               <div class="patchpad-body"><span class="patchpad-name">B4</span><span class="patchpad-vol">0</span></div>
-            </div>
-            <div class="patchpad" data-cc="84" data-note="64">
+            </button>
+            <button class="patchpad" type="button" data-cc="84" data-note="64">
               <div class="patchpad-fill"></div>
               <div class="patchpad-body"><span class="patchpad-name">B5</span><span class="patchpad-vol">0</span></div>
-            </div>
-            <div class="patchpad" data-cc="85" data-note="65">
+            </button>
+            <button class="patchpad" type="button" data-cc="85" data-note="65">
               <div class="patchpad-fill"></div>
               <div class="patchpad-body"><span class="patchpad-name">B6</span><span class="patchpad-vol">0</span></div>
-            </div>
-            <div class="patchpad" data-cc="87" data-note="67">
+            </button>
+            <button class="patchpad" type="button" data-cc="87" data-note="67">
               <div class="patchpad-fill"></div>
               <div class="patchpad-body"><span class="patchpad-name">B8</span><span class="patchpad-vol">0</span></div>
-            </div>
+            </button>
           </div>
           <div id="panic">PANIC</div>
         </section>
@@ -485,6 +512,12 @@
   }
   function sendMessage(msg) {
     if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(msg));
+    // MIDI activity blink
+    var blink = document.getElementById('midiBlink');
+    if (blink) { blink.classList.add('active'); clearTimeout(blink._t); blink._t = setTimeout(function () { blink.classList.remove('active'); }, 80); }
+  }
+  function haptic(ms) {
+    try { if (navigator.vibrate) navigator.vibrate(ms || 8); } catch (e) {}
   }
 
   // ---- Shared pitch/mod model (links QUAD + wheels) --------------------
@@ -579,6 +612,7 @@
   };
   Wheel.prototype.down = function (e) {
     e.preventDefault();
+    haptic(8);
     this.activePointer = e.pointerId;
     try { this.track.setPointerCapture(e.pointerId); } catch (err) {}
     this.setValue(this.valueFromEvent(e), false);
@@ -640,6 +674,7 @@
   };
   Quad.prototype.down = function (e) {
     e.preventDefault();
+    haptic(8);
     this.activePointer = e.pointerId;
     try { this.pad.setPointerCapture(e.pointerId); } catch (err) {}
     var v = this.valuesFromEvent(e);
@@ -697,7 +732,16 @@
   };
   Fader.prototype.down = function (e) {
     e.preventDefault();
+    haptic(8);
     this.activePointer = e.pointerId;
+    var now = Date.now();
+    if (this._lastTap && (now - this._lastTap) < 350) {
+      this.value = 0; this.render(); this.send(true);
+      haptic(15);
+      this._lastTap = 0;
+      return;
+    }
+    this._lastTap = now;
     try { this.track.setPointerCapture(e.pointerId); } catch (err) {}
     this.value = this.valueFromEvent(e);
     this.render();
@@ -751,7 +795,16 @@
   };
   Knob.prototype.down = function (e) {
     e.preventDefault();
+    haptic(8);
     this.activePointer = e.pointerId;
+    var now = Date.now();
+    if (this._lastTap && (now - this._lastTap) < 350) {
+      this.value = 0; this.render(); this.send(true);
+      haptic(15);
+      this._lastTap = 0;
+      return;
+    }
+    this._lastTap = now;
     try { this.dial.setPointerCapture(e.pointerId); } catch (err) {}
     this.startY = e.clientY;
     this.startVal = this.value;
@@ -838,6 +891,7 @@
     }
     el.addEventListener('pointerdown', function (e) {
       e.preventDefault();
+      haptic(8);
       try { el.setPointerCapture(e.pointerId); } catch (err) {}
       if (toggle) {
         state = !state;
@@ -943,6 +997,7 @@
   };
   PatchPad.prototype.down = function (e) {
     e.preventDefault();
+    haptic(8);
     this.activePointer = e.pointerId;
     try { this.el.setPointerCapture(e.pointerId); } catch (err) {}
     this.startY = e.clientY;
@@ -1011,7 +1066,7 @@
   for (var p = 0; p < patchEls.length; p++) new PatchPad(patchEls[p]);
 
   // ---- Panic (big PATCH button + global status-bar button) -----------
-  function firePanic() { sendMessage({ type: 'panic' }); }
+  function firePanic() { haptic(30); sendMessage({ type: 'panic' }); }
   var panicEl = document.getElementById('panic');
   panicEl.addEventListener('pointerdown', function (e) {
     e.preventDefault();
@@ -1036,6 +1091,7 @@
   var resetEl = document.getElementById('reset');
   resetEl.addEventListener('pointerdown', function (e) {
     e.preventDefault();
+    haptic(20);
     try { resetEl.setPointerCapture(e.pointerId); } catch (err) {}
     resetEl.classList.add('active');
     // continuous controls -> neutral
@@ -1093,6 +1149,86 @@
     }
   });
 
+  // ---- Scenes (save / recall) ----------------------------------------
+  var SCENE_KEYS = ['scene0', 'scene1', 'scene2', 'scene3'];
+  function captureState() {
+    var s = { cc: {}, notes: {}, pitch: perf.pitch, mod: perf.mod };
+    for (var i = 0; i < faders.length; i++) s.cc[faders[i].cc] = faders[i].value;
+    for (var k = 0; k < knobs.length; k++) s.cc[knobs[k].cc] = knobs[k].value;
+    for (var p = 0; p < patchPads.length; p++) {
+      s.cc[patchPads[p].cc] = patchPads[p].volume;
+      if (patchPads[p].toggle) s.notes[patchPads[p].note] = patchPads[p].state;
+    }
+    return s;
+  }
+  function recallState(s) {
+    for (var i = 0; i < faders.length; i++) {
+      if (faders[i].cc in s.cc) { faders[i].value = s.cc[faders[i].cc]; faders[i].render(); faders[i].send(true); }
+    }
+    for (var k = 0; k < knobs.length; k++) {
+      if (knobs[k].cc in s.cc) { knobs[k].value = s.cc[knobs[k].cc]; knobs[k].render(); knobs[k].send(true); }
+    }
+    for (var p = 0; p < patchPads.length; p++) {
+      if (patchPads[p].cc in s.cc) {
+        patchPads[p].volume = s.cc[patchPads[p].cc];
+      }
+      if (patchPads[p].toggle && patchPads[p].note in s.notes) {
+        var want = s.notes[patchPads[p].note];
+        if (patchPads[p].state !== want) { patchPads[p].state = want; patchPads[p].trigger(); }
+        else { patchPads[p].render(); }
+      } else { patchPads[p].render(); }
+      patchPads[p].sendVol(true);
+    }
+    perf.setPitch(s.pitch || 8192, true);
+    perf.setMod(s.mod || 0, true);
+    haptic(25);
+  }
+  function refreshSceneButtons() {
+    var els = document.querySelectorAll('.scene');
+    for (var i = 0; i < els.length; i++) {
+      var data = loadVal(SCENE_KEYS[i], null);
+      var nameEl = els[i].querySelector('.scene-name');
+      if (data) { els[i].classList.add('stored'); nameEl.textContent = data.name || ('Scene ' + (i + 1)); }
+      else { els[i].classList.remove('stored'); nameEl.textContent = '—'; }
+    }
+  }
+  var sceneEls = document.querySelectorAll('.scene');
+  for (var si = 0; si < sceneEls.length; si++) {
+      (function (el, idx) {
+        var saveTimer = null;
+        el.addEventListener('pointerdown', function (e) {
+          e.preventDefault();
+          try { el.setPointerCapture(e.pointerId); } catch (err) {}
+          el._pressed = true;
+          saveTimer = setTimeout(function () {
+            var state = captureState();
+            var name = 'Scene ' + (idx + 1);
+            persist(SCENE_KEYS[idx], { name: name, state: state });
+            el.classList.add('saving');
+            haptic(30);
+            setTimeout(function () { el.classList.remove('saving'); refreshSceneButtons(); }, 600);
+            saveTimer = null;
+          }, 800);
+        });
+        el.addEventListener('pointerup', function (e) {
+          e.preventDefault();
+          if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
+          if (el._pressed) {
+            el._pressed = false;
+            var data = loadVal(SCENE_KEYS[idx], null);
+            if (data && data.state) { recallState(data.state); }
+            else { haptic(8); }
+          }
+        });
+        el.addEventListener('pointercancel', function (e) {
+          e.preventDefault();
+          if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
+          el._pressed = false;
+        });
+      })(sceneEls[si], si);
+  }
+  refreshSceneButtons();
+
   // ---- Screens / tabs / swipe ---------------------------------------
   var NUM_SCREENS = 5;
   var currentScreen = 0;
@@ -1114,7 +1250,7 @@
   // Swipe: only from empty/section-title areas, never from a control
   var sx = 0, sy = 0, swiping = false;
   function isControlTarget(t) {
-    return !!(t.closest && t.closest('.fader-track,.knob-dial,.quad-pad,.wheel-track,.btn,.ms,.patchpad,#panic,#panicTop,#reset,#allUp,.tab'));
+    return !!(t.closest && t.closest('.fader-track,.knob-dial,.quad-pad,.wheel-track,.btn,.ms,.patchpad,.scene,#panic,#panicTop,#reset,#allUp,.tab'));
   }
   pagerEl.addEventListener('touchstart', function (e) {
     var t = e.target;
