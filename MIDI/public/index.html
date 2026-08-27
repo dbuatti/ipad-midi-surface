@@ -60,6 +60,17 @@
     background: #222; flex: 0 0 auto;
   }
   #midiBlink.active { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+  #ipBar {
+    display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    padding: 4px 14px;
+    background: #06080c;
+    border-bottom: 1px solid #000;
+    font-size: 11px; font-weight: 600; color: var(--text-dim);
+    flex: 0 0 auto;
+  }
+  #ipBar .ip-tag { color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
+  #ipBar .ip-addr { color: var(--accent); font-weight: 700; font-variant-numeric: tabular-nums; }
+  #ipBar .ip-ts { color: #7c8aff; }
   #reset, #allUp {
     height: 32px; padding: 0 14px;
     border-radius: 8px;
@@ -295,6 +306,8 @@
     <button id="allUp" type="button">FADERS 100%</button>
     <button id="reset" type="button">RESET</button>
   </div>
+
+  <div id="ipBar"><span class="ip-tag">Mac IP:</span><span id="ipList">checking…</span></div>
 
   <main>
     <nav class="tabs">
@@ -1308,6 +1321,24 @@
     if (e.touches && e.touches.length > 1) e.preventDefault();
   }, { passive: false });
   document.addEventListener('dblclick', function (e) { e.preventDefault(); }, { passive: false });
+
+  // ---- Fetch and display Mac's IP addresses (including Tailscale) ----
+  function fetchIPs() {
+    fetch('/api/ips').then(function (r) { return r.json(); }).then(function (data) {
+      var list = document.getElementById('ipList');
+      if (!data || !data.addresses || !data.addresses.length) { list.textContent = 'none — check Mac wifi'; return; }
+      var html = data.addresses.map(function (ip) {
+        var isTS = ip.indexOf('100.') === 0;
+        var port = location.port || '3000';
+        return '<span class="ip-addr' + (isTS ? ' ip-ts' : '') + '">' + ip + ':' + port + (isTS ? ' (Tailscale)' : '') + '</span>';
+      }).join('  ·  ');
+      list.innerHTML = html;
+    }).catch(function () {
+      document.getElementById('ipList').textContent = 'unavailable';
+    });
+  }
+  fetchIPs();
+  setInterval(fetchIPs, 10000); // refresh every 10s in case network changes
 
   connect();
 })();

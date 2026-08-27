@@ -77,6 +77,14 @@ const server = http.createServer((req, res) => {
   let urlPath = decodeURIComponent(req.url.split('?')[0]);
   if (urlPath === '/') urlPath = '/index.html';
 
+  // API: return all IPv4 addresses (including Tailscale)
+  if (urlPath === '/api/ips') {
+    const addresses = getIPv4Addresses();
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+    res.end(JSON.stringify({ addresses }));
+    return;
+  }
+
   // Resolve and confine to PUBLIC_DIR (block path traversal).
   const filePath = path.normalize(path.join(PUBLIC_DIR, urlPath));
   if (!filePath.startsWith(PUBLIC_DIR)) {
@@ -195,7 +203,7 @@ server.listen(PORT, () => {
 // ---------------------------------------------------------------------------
 // Startup banner: the most important line of output.
 // ---------------------------------------------------------------------------
-function printBanner() {
+function getIPv4Addresses() {
   const addresses = [];
   const ifaces = os.networkInterfaces();
   for (const name of Object.keys(ifaces)) {
@@ -205,6 +213,11 @@ function printBanner() {
       }
     }
   }
+  return addresses;
+}
+
+function printBanner() {
+  const addresses = getIPv4Addresses();
 
   const bar = '============================================================';
   console.log('');
@@ -215,7 +228,8 @@ function printBanner() {
   console.log('  OPEN THIS ON THE IPAD (use the address that matches the');
   console.log('  iPad wifi network):');
   for (const ip of addresses) {
-    console.log(`    >>>  http://${ip}:${PORT}   <<<`);
+    const tag = ip.startsWith('100.') ? '  (Tailscale)' : '';
+    console.log(`    >>>  http://${ip}:${PORT}   <<<${tag}`);
   }
   console.log(bar);
   console.log('');
