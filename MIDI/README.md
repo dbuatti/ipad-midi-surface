@@ -132,7 +132,8 @@ no Safari toolbars and the screen stays awake.
 | MOD wheel       | vertical wheel    | 1 (mod wheel) | 16 |
 | QUAD pad (X)    | XY pad            | pitch (same as PITCH wheel) | 16 |
 | QUAD pad (Y)    | XY pad            | CC 1 (same as MOD wheel) | 16 |
-| Faders F1–F8    | vertical fader    | 20–27 | 16   |
+| Faders F1–F8    | vertical fader    | 20–26, 28 | 16   |
+| MASTER          | vertical fader    | 27 | 16   |
 | Knobs K1–K8     | rotary knob       | 30–37 | 16   |
 | Patch Vol 1–8   | vertical fader    | 80–87 | 16   |
 | Reverb ON/OFF   | toggle button     | 90 | 16   |
@@ -159,8 +160,9 @@ no Safari toolbars and the screen stays awake.
 | EQ LO-MID Q     | rotary knob       | 112 | 16   |
 | EQ HI-MID Q     | rotary knob       | 113 | 16   |
 | EQ HIGH Q       | rotary knob       | 114 | 16   |
-| F1–F8 Mute (M)  | toggle button     | 50–57 | 16   |
-| F1–F7 Solo (S)  | toggle button     | 70–76 | 16   |
+| F1–F8 Mute (M)  | toggle button     | 50–56, 58 | 16   |
+| MASTER Mute (M) | toggle button     | 57 | 16   |
+| F1–F8 Solo (S)  | toggle button     | 70–76, 77 | 16   |
 | Buttons B1–B8   | Note On/Off (trigger) | 60–67 (C5–G5) | 16   |
 | PANIC           | button            | 123 | all 16  |
 
