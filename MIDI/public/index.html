@@ -64,6 +64,13 @@
     touch-action: none;
   }
   #reset.active { background: var(--accent); color: #001016; }
+  #panicTop {
+    height: 32px; padding: 0 14px;
+    border-radius: 8px; background: var(--panic); color: #fff;
+    border: 2px solid #000; font-size: 13px; font-weight: 900; letter-spacing: 2px;
+    touch-action: none;
+  }
+  #panicTop.active { background: #fff; color: var(--panic); }
   #allUp { color: var(--accent); border-color: var(--accent-dim); }
   #allUp.armed { background: var(--accent); color: #001016; animation: pulse 0.6s infinite; }
   @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.45; } }
@@ -247,7 +254,8 @@
   <div id="status">
     <span class="dot"></span>
     <span class="label">Connecting…</span>
-    <button id="allUp" type="button" style="margin-left:auto;">FADERS 100%</button>
+    <button id="panicTop" type="button">PANIC</button>
+    <button id="allUp" type="button">FADERS 100%</button>
     <button id="reset" type="button">RESET</button>
   </div>
 
@@ -976,17 +984,27 @@
   var patchEls = document.querySelectorAll('.patchpad');
   for (var p = 0; p < patchEls.length; p++) new PatchPad(patchEls[p]);
 
-  // ---- Panic ---------------------------------------------------------
+  // ---- Panic (big PATCH button + global status-bar button) -----------
+  function firePanic() { sendMessage({ type: 'panic' }); }
   var panicEl = document.getElementById('panic');
   panicEl.addEventListener('pointerdown', function (e) {
     e.preventDefault();
     try { panicEl.setPointerCapture(e.pointerId); } catch (err) {}
-    panicEl.classList.add('active');
-    sendMessage({ type: 'panic' });
+    panicEl.classList.add('active'); firePanic();
   });
   function panicRelease(e) { e.preventDefault(); panicEl.classList.remove('active'); }
   panicEl.addEventListener('pointerup', panicRelease);
   panicEl.addEventListener('pointercancel', panicRelease);
+
+  var panicTopEl = document.getElementById('panicTop');
+  panicTopEl.addEventListener('pointerdown', function (e) {
+    e.preventDefault();
+    try { panicTopEl.setPointerCapture(e.pointerId); } catch (err) {}
+    panicTopEl.classList.add('active'); firePanic();
+  });
+  function panicTopRelease(e) { e.preventDefault(); panicTopEl.classList.remove('active'); }
+  panicTopEl.addEventListener('pointerup', panicTopRelease);
+  panicTopEl.addEventListener('pointercancel', panicTopRelease);
 
   // ---- RESET to neutral ---------------------------------------------
   var resetEl = document.getElementById('reset');
@@ -1070,7 +1088,7 @@
   // Swipe: only from empty/section-title areas, never from a control
   var sx = 0, sy = 0, swiping = false;
   function isControlTarget(t) {
-    return !!(t.closest && t.closest('.fader-track,.knob-dial,.quad-pad,.wheel-track,.btn,.ms,.patchpad,#panic,#reset,#allUp,.tab'));
+    return !!(t.closest && t.closest('.fader-track,.knob-dial,.quad-pad,.wheel-track,.btn,.ms,.patchpad,#panic,#panicTop,#reset,#allUp,.tab'));
   }
   pagerEl.addEventListener('touchstart', function (e) {
     var t = e.target;

@@ -151,8 +151,23 @@ function sendMidi(msg) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// macOS notification helper (connection indicator)
+// ---------------------------------------------------------------------------
+const { execSync } = require('child_process');
+
+function macNotify(title, message) {
+  try {
+    execSync(`osascript -e 'display notification "${message}" with title "${title}" sound name "${title.includes('Disconnected') ? 'Basso' : 'Glass'}"'`, { timeout: 3000, stdio: 'ignore' });
+  } catch (_) { /* non-fatal: notifications not critical */ }
+}
+
+// ---------------------------------------------------------------------------
+// WebSocket server (same HTTP port)
+// ---------------------------------------------------------------------------
 wss.on('connection', (ws) => {
   console.log('[ws] iPad connected');
+  macNotify('iPad MIDI Surface', 'iPad connected — ready to play');
   ws.on('message', (raw) => {
     let msg;
     try {
@@ -166,7 +181,10 @@ wss.on('connection', (ws) => {
     }
     // anything else is silently ignored
   });
-  ws.on('close', () => console.log('[ws] iPad disconnected'));
+  ws.on('close', () => {
+    console.log('[ws] iPad disconnected');
+    macNotify('iPad MIDI Surface Disconnected', 'iPad lost connection — check wifi');
+  });
   ws.on('error', () => {});
 });
 

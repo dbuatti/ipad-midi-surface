@@ -192,3 +192,45 @@ The **PANIC** button sends **CC 123 value 0 on all 16 channels** — the standar
 
 In the Terminal where it's running, press **Control-C**. To run it permanently during a
 session, just leave that Terminal window open.
+
+---
+
+## Crash recovery (auto-restart)
+
+Instead of `npm start`, use the wrapper script:
+
+```bash
+./start.sh
+```
+
+If Node crashes (port conflict, MIDI error, etc.), it automatically restarts within 2
+seconds. Press **Ctrl+C** to stop. You can also double-click `start.sh` in Finder (it
+will open Terminal and start automatically).
+
+---
+
+## Offline fallback (Mac wifi hotspot)
+
+If the venue wifi dies or has client isolation (devices can't see each other), create a
+hotspot directly from the Mac — no router needed:
+
+1. **System Settings ▸ General ▸ Sharing ▸ Internet Sharing**
+2. Share from: **Wi-Fi** (or Ethernet if the Mac is wired)
+3. To computers using: **Wi-Fi**
+4. Click **Wi-Fi Options** → set a network name and password
+5. Toggle **Internet Sharing** ON
+6. On the iPad: join the Mac's hotspot wifi network
+7. Re-run `./start.sh` — the banner will print the Mac's hotspot IP (usually `192.168.2.x`)
+8. Open that URL on the iPad
+
+The server binds to **all network interfaces**, so it works on any network the Mac is on —
+venue wifi, personal hotspot, or even a USB ethernet adapter. No code changes needed.
+
+---
+
+## Mac-side connection indicator
+
+The server sends a **macOS notification** when the iPad connects (Glass sound) or
+disconnects (Basso sound). You'll see these in Notification Center even if Terminal is
+minimised. If you don't see them, check **System Settings ▸ Notifications ▸ Script Editor**
+(or Terminal) is allowed.
