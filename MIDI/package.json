@@ -1,0 +1,13 @@
+{
+  "name": "ipad-midi-surface",
+  "version": "1.0.0",
+  "description": "Wireless MIDI control surface: iPad Safari -> WebSocket -> Node -> IAC -> MainStage",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "easymidi": "^2.1.0",
+    "ws": "^8.18.0"
+  }
+}

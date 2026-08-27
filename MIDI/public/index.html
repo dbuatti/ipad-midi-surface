@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="mobile-web-app-capable" content="yes">
+<title>iPad MIDI Surface</title>
+<style>
+  :root {
+    --bg: #0a0c10;
+    --panel: #14181f;
+    --track: #05070a;
+    --accent: #00e5ff;
+    --accent-dim: #0a4a55;
+    --text: #f2f5f8;
+    --text-dim: #8a94a0;
+    --good: #00e676;
+    --bad: #ff1744;
+    --panic: #ff2d2d;
+  }
+
+  * {
+    box-sizing: border-box;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html, body {
+    margin: 0; padding: 0;
+    height: 100%; width: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    overflow: hidden;
+    position: fixed; inset: 0;
+    overscroll-behavior: none;
+    touch-action: none;
+    display: flex; flex-direction: column;
+  }
+
+  #status {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 14px;
+    background: var(--panel);
+    border-bottom: 1px solid #000;
+    font-size: 15px; font-weight: 600; letter-spacing: 0.3px;
+    flex: 0 0 auto;
+  }
+  #status .dot { width: 16px; height: 16px; border-radius: 50%; background: var(--bad); box-shadow: 0 0 10px var(--bad); flex: 0 0 auto; }
+  #status.connected .dot { background: var(--good); box-shadow: 0 0 12px var(--good); }
+  #status .label { text-transform: uppercase; }
+  #status.connected .label { color: var(--good); }
+  #status:not(.connected) .label { color: var(--bad); }
+  #reset, #allUp {
+    height: 32px; padding: 0 14px;
+    border-radius: 8px;
+    background: #1d2530; color: var(--text);
+    border: 2px solid #000;
+    font-size: 13px; font-weight: 800; letter-spacing: 1px;
+    touch-action: none;
+  }
+  #reset.active { background: var(--accent); color: #001016; }
+  #allUp { color: var(--accent); border-color: var(--accent-dim); }
+  #allUp.armed { background: var(--accent); color: #001016; animation: pulse 0.6s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.45; } }
+
+  main { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; }
+
+  /* ---- Tabs ---- */
+  .tabs {
+    display: flex; gap: 4px; padding: 6px;
+    background: var(--panel);
+    border-bottom: 1px solid #000;
+    flex: 0 0 auto;
+  }
+  .tab {
+    flex: 1 1 0; min-height: 44px;
+    border-radius: 8px;
+    background: #1d2530; color: var(--text-dim);
+    border: 2px solid #000;
+    font-size: 13px; font-weight: 800; letter-spacing: 1px;
+    touch-action: none;
+  }
+  .tab.active { background: var(--accent); color: #001016; }
+
+  /* ---- Pager / screens ---- */
+  .pager { flex: 1 1 auto; position: relative; overflow: hidden; min-height: 0; }
+  .screens { display: flex; width: 500%; height: 100%; transition: transform .25s ease; will-change: transform; }
+  .screen { width: 20%; height: 100%; flex: 0 0 20%; display: flex; flex-direction: column; gap: 6px; padding: 8px; overflow: hidden; }
+
+  .section-title {
+    font-size: 11px; font-weight: 800; letter-spacing: 2px;
+    color: var(--text-dim); text-transform: uppercase;
+    flex: 0 0 auto; padding: 0 2px;
+  }
+
+  /* ---- Wheels ---- */
+  .wheels { display: flex; gap: 8px; flex: 0 0 auto; height: 190px; }
+  .wheel {
+    flex: 1 1 0; display: flex; flex-direction: column; align-items: center;
+    background: var(--panel); border-radius: 12px; padding: 8px 4px; border: 1px solid #000; min-width: 0;
+  }
+  .wheel-value { font-size: 20px; font-weight: 800; line-height: 1; color: var(--accent); font-variant-numeric: tabular-nums; min-height: 22px; }
+  .wheel-track {
+    position: relative; flex: 1 1 auto; width: 74px; min-height: 0;
+    background: var(--track); border-radius: 37px; border: 1px solid #000; touch-action: none; overflow: hidden;
+  }
+  .wheel-fill { position: absolute; left: 0; right: 0; top: 0; height: 0%; background: linear-gradient(180deg, var(--accent), var(--accent-dim)); }
+  .wheel-center { position: absolute; left: 0; right: 0; top: 50%; height: 2px; background: rgba(255,255,255,0.28); z-index: 2; }
+  .wheel-handle {
+    position: absolute; left: 50%; transform: translate(-50%, 50%); bottom: 0%;
+    width: 88px; height: 28px; background: #e8eef3; border: 2px solid #000; border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.6); z-index: 3;
+  }
+  .wheel-label { margin-top: 6px; font-size: 12px; font-weight: 700; color: var(--text); letter-spacing: 1px; }
+
+  /* ---- QUAD ---- */
+  .quad { flex: 1 1 auto; display: flex; flex-direction: column; gap: 6px; background: var(--panel); border-radius: 12px; border: 1px solid #000; padding: 8px; min-height: 0; }
+  .quad-readout { display: flex; justify-content: space-between; font-size: 14px; font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums; letter-spacing: 0.5px; }
+  .quad-pad {
+    position: relative; flex: 1 1 auto; min-height: 0;
+    background: var(--track); border-radius: 12px; border: 1px solid #000; touch-action: none; overflow: hidden;
+  }
+  .quad-vline, .quad-hline { position: absolute; background: rgba(0,229,255,0.5); pointer-events: none; }
+  .quad-vline { top: 0; bottom: 0; width: 2px; left: 50%; transform: translateX(-50%); }
+  .quad-hline { left: 0; right: 0; height: 2px; top: 50%; transform: translateY(-50%); }
+  .quad-pointer {
+    position: absolute; width: 54px; height: 54px; margin-left: -27px; margin-top: -27px;
+    border-radius: 50%; background: var(--accent); border: 3px solid #001016;
+    box-shadow: 0 0 14px var(--accent); pointer-events: none; z-index: 3;
+  }
+  .quad-label { font-size: 11px; font-weight: 800; letter-spacing: 2px; color: var(--text-dim); text-transform: uppercase; }
+
+  /* ---- Faders ---- */
+  .faders { display: flex; gap: 8px; flex: 1 1 auto; min-height: 0; }
+  .fader { flex: 1 1 0; display: flex; flex-direction: column; align-items: center; background: var(--panel); border-radius: 12px; padding: 8px 4px; border: 1px solid #000; min-width: 0; }
+  .fader-value { font-size: 22px; font-weight: 800; line-height: 1; color: var(--accent); font-variant-numeric: tabular-nums; min-height: 24px; }
+  .fader-track { position: relative; flex: 1 1 auto; width: 52px; min-height: 0; background: var(--track); border-radius: 26px; border: 1px solid #000; touch-action: none; overflow: hidden; }
+  .fader-fill { position: absolute; left: 0; right: 0; bottom: 0; background: linear-gradient(180deg, var(--accent), var(--accent-dim)); border-radius: 0 0 26px 26px; height: 0%; }
+  .fader-handle { position: absolute; left: 50%; transform: translate(-50%, 50%); bottom: 0%; width: 72px; height: 34px; background: #e8eef3; border: 2px solid #000; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.6); }
+  .fader-label {
+    margin-top: 6px;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text);
+    text-align: center;
+    line-height: 1.1;
+    word-break: break-word;
+  }
+  .fader-ms { display: flex; gap: 4px; margin-top: 6px; justify-content: center; flex: 0 0 auto; }
+  .ms {
+    width: 34px; height: 34px; border-radius: 8px;
+    background: #1d2530; color: var(--text-dim);
+    border: 2px solid #000; font-size: 14px; font-weight: 800;
+    touch-action: none; display: flex; align-items: center; justify-content: center;
+  }
+  .ms-mute { color: #ff5252; }
+  .ms-mute.on { background: #ff5252; color: #fff; }
+  .ms-solo { color: #ffab40; }
+  .ms-solo.on { background: #ffab40; color: #001016; }
+
+  /* ---- Knobs ---- */
+  .knobs { display: flex; gap: 8px; flex: 0 0 auto; }
+  .knob { flex: 1 1 0; display: flex; flex-direction: column; align-items: center; min-width: 0; }
+  .knob-dial { position: relative; width: 58px; height: 58px; border-radius: 50%; background: radial-gradient(circle at 50% 38%, #2a3340, #14181f); border: 2px solid #000; box-shadow: inset 0 2px 6px rgba(0,0,0,0.6); touch-action: none; }
+  .knob-indicator { position: absolute; left: 50%; top: 5px; width: 4px; height: 20px; background: var(--accent); border-radius: 2px; transform: translateX(-50%); }
+  .knob-value { font-size: 17px; font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums; margin-top: 6px; min-height: 19px; }
+  .knob-label { font-size: 12px; font-weight: 700; color: var(--text); margin-top: 2px; }
+
+  /* ---- Buttons ---- */
+  .buttons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-auto-rows: 1fr;
+    gap: 10px;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+  .btn {
+    min-width: 0; min-height: 0; border-radius: 14px;
+    background: #1d2530; color: var(--text); border: 2px solid #000;
+    font-size: 18px; font-weight: 700; text-align: center; touch-action: none;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 8px;
+  }
+  .btn.active { background: var(--accent); color: #001016; }
+  .btn svg { width: 48px; height: 48px; display: block; }
+  .btn-cap { font-size: 14px; font-weight: 800; letter-spacing: 1px; }
+  .btn-rain { color: #4fc3f7; }
+  .btn-rain.active { background: #4fc3f7; }
+  .btn-stop { color: #ff5252; }
+  .btn-stop.active { background: #ff5252; color: #fff; }
+  .btn-toggle .btn-state { font-size: 12px; font-weight: 800; letter-spacing: 1px; }
+  .btn-toggle.on { background: #00e676; color: #001016; border-color: #00e676; }
+
+  /* ---- Patch pads (fader + trigger in one) ---- */
+  .patches { display: flex; gap: 6px; flex: 1 1 auto; min-height: 0; }
+  .patchpad {
+    flex: 1 1 0; position: relative; min-width: 0;
+    border-radius: 14px; border: 2px solid #000;
+    background: #1d2530; color: var(--text);
+    touch-action: none; overflow: hidden;
+    display: flex; flex-direction: column; justify-content: flex-end;
+  }
+  .patchpad-fill {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    height: 0%; background: linear-gradient(180deg, var(--accent), var(--accent-dim));
+    border-radius: 0 0 12px 12px; pointer-events: none;
+    transition: height .04s linear;
+  }
+  .patchpad-body {
+    position: relative; z-index: 2;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 4px; padding: 10px 4px; pointer-events: none;
+    flex: 1 1 auto;
+  }
+  .patchpad-name { font-size: 13px; font-weight: 800; letter-spacing: 1px; text-align: center; }
+  .patchpad-state { font-size: 11px; font-weight: 800; color: var(--text-dim); }
+  .patchpad-vol { font-size: 16px; font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums; }
+  .patchpad-triggered { background: #2a4050; }
+  .patchpad.on { border-color: var(--good); }
+  .patchpad.on .patchpad-fill { background: linear-gradient(180deg, var(--good), #0a5a30); }
+  .patchpad.on .patchpad-state { color: var(--good); }
+  .patchpad-rain.on { border-color: #4fc3f7; }
+  .patchpad-rain.on .patchpad-fill { background: linear-gradient(180deg, #4fc3f7, #0a4a6a); }
+  .patchpad-rain.on .patchpad-state { color: #4fc3f7; }
+  .patchpad.dragging .patchpad-fill { transition: none; }
+
+  /* ---- Panic ---- */
+  #panic {
+    flex: 0 0 auto; width: 100%; min-height: 84px; border-radius: 14px;
+    background: var(--panic); color: #fff; border: 3px solid #000;
+    font-size: 28px; font-weight: 900; letter-spacing: 3px; text-align: center;
+    touch-action: none; display: flex; align-items: center; justify-content: center;
+  }
+  #panic.active { background: #fff; color: var(--panic); }
+
+  /* ---- All-up button (legacy block, now in status bar) ---- */
+
+  .spacer { flex: 1 1 auto; }
+</style>
+</head>
+<body>
+  <div id="status">
+    <span class="dot"></span>
+    <span class="label">Connecting…</span>
+    <button id="allUp" type="button" style="margin-left:auto;">FADERS 100%</button>
+    <button id="reset" type="button">RESET</button>
+  </div>
+
+  <main>
+    <nav class="tabs">
+      <button class="tab active" type="button" data-screen="0">PERFORM</button>
+      <button class="tab" type="button" data-screen="1">MIX</button>
+      <button class="tab" type="button" data-screen="2">PATCH</button>
+      <button class="tab" type="button" data-screen="3">REVERB</button>
+      <button class="tab" type="button" data-screen="4">EQ</button>
+    </nav>
+
+    <div class="pager">
+      <div class="screens">
+
+        <!-- SCREEN 0: PERFORM -->
+        <section class="screen" id="screen-perform">
+          <div class="section-title">Wheels (linked to Quad)</div>
+          <div class="wheels">
+            <div class="wheel" data-kind="pitch">
+              <div class="wheel-value">0</div>
+              <div class="wheel-track">
+                <div class="wheel-center"></div>
+                <div class="wheel-fill"></div>
+                <div class="wheel-handle"></div>
+              </div>
+              <div class="wheel-label">PITCH</div>
+            </div>
+            <div class="wheel" data-kind="mod">
+              <div class="wheel-value">0</div>
+              <div class="wheel-track">
+                <div class="wheel-fill"></div>
+                <div class="wheel-handle"></div>
+              </div>
+              <div class="wheel-label">MOD</div>
+            </div>
+          </div>
+
+          <div class="section-title">QUAD — X: Pitch · Y: Mod</div>
+          <div class="quad">
+            <div class="quad-readout">
+              <span class="quad-pitch">PITCH +0</span>
+              <span class="quad-mod">MOD 0</span>
+            </div>
+            <div class="quad-pad">
+              <div class="quad-vline"></div>
+              <div class="quad-hline"></div>
+              <div class="quad-pointer"></div>
+            </div>
+            <div class="quad-label">Pitch springs to center · Mod holds</div>
+          </div>
+        </section>
+
+        <!-- SCREEN 1: MIX -->
+        <section class="screen" id="screen-mix">
+          <div class="section-title">Faders</div>
+          <div class="faders">
+            <div class="fader" data-cc="20"><div class="fader-value">0</div><div class="fader-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">PIANO</div><div class="fader-ms"><button class="ms ms-mute" type="button" data-cc="50" data-toggle="1">M</button><button class="ms ms-solo" type="button" data-cc="70" data-toggle="1">S</button></div></div>
+            <div class="fader" data-cc="21"><div class="fader-value">0</div><div class="fader-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">FELT PIANO</div><div class="fader-ms"><button class="ms ms-mute" type="button" data-cc="51" data-toggle="1">M</button><button class="ms ms-solo" type="button" data-cc="71" data-toggle="1">S</button></div></div>
+            <div class="fader" data-cc="22"><div class="fader-value">0</div><div class="fader-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">STRINGS</div><div class="fader-ms"><button class="ms ms-mute" type="button" data-cc="52" data-toggle="1">M</button><button class="ms ms-solo" type="button" data-cc="72" data-toggle="1">S</button></div></div>
+            <div class="fader" data-cc="23"><div class="fader-value">0</div><div class="fader-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">PADS</div><div class="fader-ms"><button class="ms ms-mute" type="button" data-cc="53" data-toggle="1">M</button><button class="ms ms-solo" type="button" data-cc="73" data-toggle="1">S</button></div></div>
+            <div class="fader" data-cc="24"><div class="fader-value">0</div><div class="fader-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">F5</div><div class="fader-ms"><button class="ms ms-mute" type="button" data-cc="54" data-toggle="1">M</button><button class="ms ms-solo" type="button" data-cc="74" data-toggle="1">S</button></div></div>
+            <div class="fader" data-cc="25"><div class="fader-value">0</div><div class="fader-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">F6</div><div class="fader-ms"><button class="ms ms-mute" type="button" data-cc="55" data-toggle="1">M</button><button class="ms ms-solo" type="button" data-cc="75" data-toggle="1">S</button></div></div>
+            <div class="fader" data-cc="26"><div class="fader-value">0</div><div class="fader-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">F7</div><div class="fader-ms"><button class="ms ms-mute" type="button" data-cc="56" data-toggle="1">M</button><button class="ms ms-solo" type="button" data-cc="76" data-toggle="1">S</button></div></div>
+            <div class="fader" data-cc="27"><div class="fader-value">0</div><div class="fader-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">MASTER</div><div class="fader-ms"><button class="ms ms-mute" type="button" data-cc="57" data-toggle="1">M</button></div></div>
+          </div>
+          <div class="section-title">Knobs</div>
+          <div class="knobs">
+            <div class="knob" data-cc="30"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">REV MAS</div></div>
+            <div class="knob" data-cc="31"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">K2</div></div>
+            <div class="knob" data-cc="32"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">K3</div></div>
+            <div class="knob" data-cc="33"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">K4</div></div>
+            <div class="knob" data-cc="34"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">K5</div></div>
+            <div class="knob" data-cc="35"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">K6</div></div>
+            <div class="knob" data-cc="36"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">K7</div></div>
+            <div class="knob" data-cc="37"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">K8</div></div>
+          </div>
+        </section>
+
+        <!-- SCREEN 2: PATCH -->
+        <section class="screen" id="screen-patch">
+          <div class="section-title">Patches — drag to set volume · tap to trigger</div>
+          <div class="patches">
+            <div class="patchpad" data-cc="80" data-note="60" data-toggle="1">
+              <div class="patchpad-fill"></div>
+              <div class="patchpad-body"><span class="patchpad-name">DRONE</span><span class="patchpad-state">OFF</span></div>
+            </div>
+            <div class="patchpad patchpad-rain" data-cc="86" data-note="66" data-toggle="1">
+              <div class="patchpad-fill"></div>
+              <div class="patchpad-body"><span class="patchpad-name">RAIN</span><span class="patchpad-state">OFF</span></div>
+            </div>
+            <div class="patchpad" data-cc="81" data-note="61">
+              <div class="patchpad-fill"></div>
+              <div class="patchpad-body"><span class="patchpad-name">B2</span><span class="patchpad-vol">0</span></div>
+            </div>
+            <div class="patchpad" data-cc="82" data-note="62">
+              <div class="patchpad-fill"></div>
+              <div class="patchpad-body"><span class="patchpad-name">B3</span><span class="patchpad-vol">0</span></div>
+            </div>
+            <div class="patchpad" data-cc="83" data-note="63">
+              <div class="patchpad-fill"></div>
+              <div class="patchpad-body"><span class="patchpad-name">B4</span><span class="patchpad-vol">0</span></div>
+            </div>
+            <div class="patchpad" data-cc="84" data-note="64">
+              <div class="patchpad-fill"></div>
+              <div class="patchpad-body"><span class="patchpad-name">B5</span><span class="patchpad-vol">0</span></div>
+            </div>
+            <div class="patchpad" data-cc="85" data-note="65">
+              <div class="patchpad-fill"></div>
+              <div class="patchpad-body"><span class="patchpad-name">B6</span><span class="patchpad-vol">0</span></div>
+            </div>
+            <div class="patchpad" data-cc="87" data-note="67">
+              <div class="patchpad-fill"></div>
+              <div class="patchpad-body"><span class="patchpad-name">B8</span><span class="patchpad-vol">0</span></div>
+            </div>
+          </div>
+          <div id="panic">PANIC</div>
+        </section>
+
+        <!-- SCREEN 3: REVERB -->
+        <section class="screen" id="screen-reverb">
+          <div class="section-title">Reverb</div>
+          <div class="btn btn-toggle rev-power" data-cc="90" data-toggle="1" style="min-height:64px;font-size:20px;">
+            <span class="btn-cap">REVERB</span>
+            <span class="btn-state">OFF</span>
+          </div>
+          <div class="section-title">Parameters</div>
+          <div class="faders" style="flex:1 1 auto;min-height:0;">
+            <div class="fader" data-cc="91"><div class="fader-value">0</div><div class="fader-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">DRY</div></div>
+            <div class="fader" data-cc="95"><div class="fader-value">0</div><div class="fader-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">WET</div></div>
+            <div class="fader" data-cc="92"><div class="fader-value">0</div><div class="fader-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">SIZE</div></div>
+            <div class="fader" data-cc="93"><div class="fader-value">0</div><div class="fader-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">DAMP</div></div>
+            <div class="fader" data-cc="94"><div class="fader-value">0</div><div class="fader-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">PREDELAY</div></div>
+          </div>
+          <div class="section-title">Fine</div>
+          <div class="knobs">
+            <div class="knob" data-cc="96"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">DECAY</div></div>
+            <div class="knob" data-cc="97"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">TONE</div></div>
+            <div class="knob" data-cc="98"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">WIDTH</div></div>
+            <div class="knob" data-cc="99"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">DIFF</div></div>
+            <div class="knob" data-cc="100"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">MOD</div></div>
+          </div>
+        </section>
+
+        <!-- SCREEN 4: EQ -->
+        <section class="screen" id="screen-eq">
+          <div class="section-title">EQ — 4-band parametric</div>
+          <div class="btn btn-toggle eq-power" data-cc="101" data-toggle="1" style="min-height:56px;font-size:18px;">
+            <span class="btn-cap">EQ</span>
+            <span class="btn-state">OFF</span>
+          </div>
+          <div class="section-title">Gain (boost / cut)</div>
+          <div class="faders" style="flex:1 1 auto;min-height:0;">
+            <div class="fader" data-cc="102"><div class="fader-value">0</div><div class="fader-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">LOW</div></div>
+            <div class="fader" data-cc="103"><div class="fader-value">0</div><div class="fader-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">LO-MID</div></div>
+            <div class="fader" data-cc="104"><div class="fader-value">0</div><div class="fader-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">HI-MID</div></div>
+            <div class="fader" data-cc="105"><div class="fader-value">0</div><div class="fader-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">HIGH</div></div>
+          </div>
+          <div class="section-title">Frequency</div>
+          <div class="knobs">
+            <div class="knob" data-cc="106"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">LOW FQ</div></div>
+            <div class="knob" data-cc="107"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">LM FQ</div></div>
+            <div class="knob" data-cc="108"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">HM FQ</div></div>
+            <div class="knob" data-cc="109"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">HI FQ</div></div>
+          </div>
+          <div class="section-title">Q (resonance)</div>
+          <div class="knobs">
+            <div class="knob" data-cc="111"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">LOW Q</div></div>
+            <div class="knob" data-cc="112"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">LM Q</div></div>
+            <div class="knob" data-cc="113"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">HM Q</div></div>
+            <div class="knob" data-cc="114"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">HI Q</div></div>
+          </div>
+        </section>
+    </div>
+  </main>
+
+<script>
+(function () {
+  'use strict';
+
+  var ws = null;
+  var reconnectDelay = 500;
+  var faders = [];
+  var knobs = [];
+  var toggles = [];
+  var msRegistry = {}; // cc -> { deactivate() } for M/S linkage
+
+  var SEND_INTERVAL = 1000 / 60;
+
+  var STORE_KEY = 'midiSurface.v1';
+  function loadVal(key, def) {
+    try {
+      var data = JSON.parse(localStorage.getItem(STORE_KEY) || '{}') || {};
+      return (key in data) ? data[key] : def;
+    } catch (e) { return def; }
+  }
+  function persist(key, val) {
+    try {
+      var data = JSON.parse(localStorage.getItem(STORE_KEY) || '{}') || {};
+      data[key] = val;
+      localStorage.setItem(STORE_KEY, JSON.stringify(data));
+    } catch (e) {}
+  }
+
+  var statusEl = document.getElementById('status');
+  var statusLabel = statusEl.querySelector('.label');
+  function setStatus(connected) {
+    if (connected) { statusEl.classList.add('connected'); statusLabel.textContent = 'Connected'; }
+    else { statusEl.classList.remove('connected'); statusLabel.textContent = 'Disconnected — retrying'; }
+  }
+  function sendMessage(msg) {
+    if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(msg));
+  }
+
+  // ---- Shared pitch/mod model (links QUAD + wheels) --------------------
+  // pitch: 14-bit 0..16383 (8192 = center); springs back to center on release
+  // mod:   CC 1, 0..127; holds where released
+  var perf = {
+    pitch: loadVal('pitch', 8192),
+    mod: loadVal('mod', 0),
+    views: [],
+    _lp: 0, _lm: 0,
+    setPitch: function (v, force) {
+      this.pitch = v;
+      var now = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+      if (force || (now - this._lp) >= SEND_INTERVAL) {
+        this._lp = now;
+        if (force) persist('pitch', v);
+        sendMessage({ type: 'pitch', value: v });
+      }
+      this.renderViews();
+    },
+    setMod: function (v, force) {
+      this.mod = v;
+      var now = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+      if (force || (now - this._lm) >= SEND_INTERVAL) {
+        this._lm = now;
+        if (force) persist('mod', v);
+        sendMessage({ type: 'cc', controller: 1, value: v });
+      }
+      this.renderViews();
+    },
+    renderViews: function () {
+      for (var i = 0; i < this.views.length; i++) this.views[i].render();
+    },
+    resend: function () {
+      sendMessage({ type: 'pitch', value: this.pitch });
+      sendMessage({ type: 'cc', controller: 1, value: this.mod });
+    }
+  };
+
+  // ---- Wheel (pitch or mod) --------------------------------------------
+  function Wheel(el, kind) {
+    this.el = el;
+    this.kind = kind; // 'pitch' | 'mod'
+    this.track = el.querySelector('.wheel-track');
+    this.fill = el.querySelector('.wheel-fill');
+    this.handle = el.querySelector('.wheel-handle');
+    this.valueEl = el.querySelector('.wheel-value');
+    this.activePointer = null;
+    var self = this;
+    this.track.addEventListener('pointerdown', function (e) { self.down(e); });
+    this.track.addEventListener('pointermove', function (e) { self.move(e); });
+    this.track.addEventListener('pointerup', function (e) { self.up(e); });
+    this.track.addEventListener('pointercancel', function (e) { self.up(e); });
+    perf.views.push(this);
+    this.render();
+  }
+  Wheel.prototype.min = function () { return this.kind === 'pitch' ? 0 : 0; };
+  Wheel.prototype.max = function () { return this.kind === 'pitch' ? 16383 : 127; };
+  Wheel.prototype.center = function () { return this.kind === 'pitch' ? 8192 : 0; };
+  Wheel.prototype.spring = function () { return this.kind === 'pitch'; };
+  Wheel.prototype.render = function () {
+    var min = this.min(), max = this.max(), span = max - min;
+    var v = this.kind === 'pitch' ? perf.pitch : perf.mod;
+    var pct = ((v - min) / span) * 100;
+    if (pct < 0) pct = 0; if (pct > 100) pct = 100;
+    this.handle.style.bottom = pct + '%';
+    if (this.kind === 'pitch') {
+      var centerPct = ((this.center() - min) / span) * 100;
+      if (pct >= centerPct) { this.fill.style.top = centerPct + '%'; this.fill.style.height = (pct - centerPct) + '%'; }
+      else { this.fill.style.top = pct + '%'; this.fill.style.height = (centerPct - pct) + '%'; }
+    } else {
+      this.fill.style.top = '0%'; this.fill.style.height = pct + '%';
+    }
+    if (this.kind === 'pitch') {
+      var s = v - this.center();
+      this.valueEl.textContent = (s > 0 ? '+' : '') + s;
+    } else {
+      this.valueEl.textContent = String(v);
+    }
+  };
+  Wheel.prototype.valueFromEvent = function (e) {
+    var rect = this.track.getBoundingClientRect();
+    var y = e.clientY - rect.top;
+    if (y < 0) y = 0; if (y > rect.height) y = rect.height;
+    var v = Math.round((1 - y / rect.height) * (this.max() - this.min())) + this.min();
+    if (v < this.min()) v = this.min(); if (v > this.max()) v = this.max();
+    return v;
+  };
+  Wheel.prototype.setValue = function (v, force) {
+    if (this.kind === 'pitch') perf.setPitch(v, force);
+    else perf.setMod(v, force);
+  };
+  Wheel.prototype.down = function (e) {
+    e.preventDefault();
+    this.activePointer = e.pointerId;
+    try { this.track.setPointerCapture(e.pointerId); } catch (err) {}
+    this.setValue(this.valueFromEvent(e), false);
+  };
+  Wheel.prototype.move = function (e) {
+    if (e.pointerId !== this.activePointer) return;
+    e.preventDefault();
+    this.setValue(this.valueFromEvent(e), false);
+  };
+  Wheel.prototype.up = function (e) {
+    if (e.pointerId !== this.activePointer) return;
+    e.preventDefault();
+    this.activePointer = null;
+    try { this.track.releasePointerCapture(e.pointerId); } catch (err) {}
+    if (this.spring()) this.setValue(this.center(), true);
+  };
+
+  // ---- QUAD XY pad (X = pitch, Y = mod) -------------------------------
+  function Quad(el) {
+    this.pad = el.querySelector('.quad-pad');
+    this.pointer = el.querySelector('.quad-pointer');
+    this.vLine = el.querySelector('.quad-vline');
+    this.hLine = el.querySelector('.quad-hline');
+    this.pitchEl = el.querySelector('.quad-pitch');
+    this.modEl = el.querySelector('.quad-mod');
+    this.activePointer = null;
+    var self = this;
+    this.pad.addEventListener('pointerdown', function (e) { self.down(e); });
+    this.pad.addEventListener('pointermove', function (e) { self.move(e); });
+    this.pad.addEventListener('pointerup', function (e) { self.up(e); });
+    this.pad.addEventListener('pointercancel', function (e) { self.up(e); });
+    perf.views.push(this);
+    this.render();
+  }
+  Quad.prototype.valuesFromEvent = function (e) {
+    var rect = this.pad.getBoundingClientRect();
+    var x = e.clientX - rect.left;
+    if (x < 0) x = 0; if (x > rect.width) x = rect.width;
+    var y = e.clientY - rect.top;
+    if (y < 0) y = 0; if (y > rect.height) y = rect.height;
+    var xf = x / rect.width, yf = y / rect.height;
+    var pitch = Math.round(xf * 16383);
+    var mod = Math.round((1 - yf) * 127);
+    if (pitch < 0) pitch = 0; if (pitch > 16383) pitch = 16383;
+    if (mod < 0) mod = 0; if (mod > 127) mod = 127;
+    return { pitch: pitch, mod: mod };
+  };
+  Quad.prototype.render = function () {
+    var xf = perf.pitch / 16383;
+    var yf = 1 - perf.mod / 127;
+    var leftPct = xf * 100, topPct = yf * 100;
+    this.pointer.style.left = leftPct + '%';
+    this.pointer.style.top = topPct + '%';
+    this.vLine.style.left = leftPct + '%';
+    this.hLine.style.top = topPct + '%';
+    var s = perf.pitch - 8192;
+    this.pitchEl.textContent = 'PITCH ' + (s > 0 ? '+' : '') + s;
+    this.modEl.textContent = 'MOD ' + perf.mod;
+  };
+  Quad.prototype.down = function (e) {
+    e.preventDefault();
+    this.activePointer = e.pointerId;
+    try { this.pad.setPointerCapture(e.pointerId); } catch (err) {}
+    var v = this.valuesFromEvent(e);
+    perf.setPitch(v.pitch, false);
+    perf.setMod(v.mod, false);
+  };
+  Quad.prototype.move = function (e) {
+    if (e.pointerId !== this.activePointer) return;
+    e.preventDefault();
+    var v = this.valuesFromEvent(e);
+    perf.setPitch(v.pitch, false);
+    perf.setMod(v.mod, false);
+  };
+  Quad.prototype.up = function (e) {
+    if (e.pointerId !== this.activePointer) return;
+    e.preventDefault();
+    this.activePointer = null;
+    try { this.pad.releasePointerCapture(e.pointerId); } catch (err) {}
+    perf.setPitch(8192, true);          // pitch springs back to center
+    perf.setMod(perf.mod, true);        // mod holds; flush final value
+  };
+
+  // ---- Fader ----------------------------------------------------------
+  function Fader(el) {
+    this.el = el;
+    this.cc = parseInt(el.getAttribute('data-cc'), 10);
+    this.value = loadVal('cc:' + this.cc, 0);
+    this.track = el.querySelector('.fader-track');
+    this.fill = el.querySelector('.fader-fill');
+    this.handle = el.querySelector('.fader-handle');
+    this.valueEl = el.querySelector('.fader-value');
+    this.activePointer = null;
+    this.lastSent = 0;
+    var self = this;
+    this.track.addEventListener('pointerdown', function (e) { self.down(e); });
+    this.track.addEventListener('pointermove', function (e) { self.move(e); });
+    this.track.addEventListener('pointerup', function (e) { self.up(e); });
+    this.track.addEventListener('pointercancel', function (e) { self.up(e); });
+    this.render();
+  }
+  Fader.prototype.render = function () {
+    var pct = (this.value / 127) * 100;
+    this.fill.style.height = pct + '%';
+    this.handle.style.bottom = pct + '%';
+    this.valueEl.textContent = String(this.value);
+  };
+  Fader.prototype.valueFromEvent = function (e) {
+    var rect = this.track.getBoundingClientRect();
+    var y = e.clientY - rect.top;
+    if (y < 0) y = 0; if (y > rect.height) y = rect.height;
+    var v = Math.round((1 - y / rect.height) * 127);
+    if (v < 0) v = 0; if (v > 127) v = 127;
+    if (v <= 1) v = 0; else if (v >= 126) v = 127;
+    return v;
+  };
+  Fader.prototype.down = function (e) {
+    e.preventDefault();
+    this.activePointer = e.pointerId;
+    try { this.track.setPointerCapture(e.pointerId); } catch (err) {}
+    this.value = this.valueFromEvent(e);
+    this.render();
+    this.send(false);
+  };
+  Fader.prototype.move = function (e) {
+    if (e.pointerId !== this.activePointer) return;
+    e.preventDefault();
+    this.value = this.valueFromEvent(e);
+    this.render();
+    this.send(false);
+  };
+  Fader.prototype.up = function (e) {
+    if (e.pointerId !== this.activePointer) return;
+    e.preventDefault();
+    this.activePointer = null;
+    try { this.track.releasePointerCapture(e.pointerId); } catch (err) {}
+    this.send(true);
+  };
+  Fader.prototype.send = function (force) {
+    var now = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+    if (!force && (now - this.lastSent) < SEND_INTERVAL) return;
+    this.lastSent = now;
+    sendMessage({ type: 'cc', controller: this.cc, value: this.value });
+    if (force) persist('cc:' + this.cc, this.value);
+  };
+  Fader.prototype.resend = function () { this.send(true); };
+
+  // ---- Knob (vertical drag) ------------------------------------------
+  function Knob(el) {
+    this.el = el;
+    this.cc = parseInt(el.getAttribute('data-cc'), 10);
+    this.value = loadVal('cc:' + this.cc, 0);
+    this.dial = el.querySelector('.knob-dial');
+    this.valueEl = el.querySelector('.knob-value');
+    this.activePointer = null;
+    this.lastSent = 0;
+    this.startY = 0;
+    this.startVal = 0;
+    var self = this;
+    this.dial.addEventListener('pointerdown', function (e) { self.down(e); });
+    this.dial.addEventListener('pointermove', function (e) { self.move(e); });
+    this.dial.addEventListener('pointerup', function (e) { self.up(e); });
+    this.dial.addEventListener('pointercancel', function (e) { self.up(e); });
+    this.render();
+  }
+  Knob.prototype.render = function () {
+    this.valueEl.textContent = String(this.value);
+    var deg = -135 + (this.value / 127) * 270;
+    this.dial.style.transform = 'rotate(' + deg + 'deg)';
+  };
+  Knob.prototype.down = function (e) {
+    e.preventDefault();
+    this.activePointer = e.pointerId;
+    try { this.dial.setPointerCapture(e.pointerId); } catch (err) {}
+    this.startY = e.clientY;
+    this.startVal = this.value;
+    this.send(false);
+  };
+  Knob.prototype.move = function (e) {
+    if (e.pointerId !== this.activePointer) return;
+    e.preventDefault();
+    var dy = this.startY - e.clientY;
+    var v = this.startVal + (dy / 200) * 127;
+    if (v < 0) v = 0; if (v > 127) v = 127;
+    this.value = Math.round(v);
+    this.render();
+    this.send(false);
+  };
+  Knob.prototype.up = function (e) {
+    if (e.pointerId !== this.activePointer) return;
+    e.preventDefault();
+    this.activePointer = null;
+    try { this.dial.releasePointerCapture(e.pointerId); } catch (err) {}
+    this.send(true);
+  };
+  Knob.prototype.send = function (force) {
+    var now = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+    if (!force && (now - this.lastSent) < SEND_INTERVAL) return;
+    this.lastSent = now;
+    sendMessage({ type: 'cc', controller: this.cc, value: this.value });
+    if (force) persist('cc:' + this.cc, this.value);
+  };
+  Knob.prototype.resend = function () { this.send(true); };
+
+  // ---- Buttons --------------------------------------------------------
+  // Trigger buttons (PATCH grid) send Note On/Off — what Drum Pads expect.
+  // Mute/Solo buttons send CC — what channel-strip state controls expect.
+  function bindButton(el) {
+    var noteAttr = el.getAttribute('data-note');
+    var note = noteAttr != null ? parseInt(noteAttr, 10) : NaN;
+    var isNote = !isNaN(note);
+    var cc = parseInt(el.getAttribute('data-cc'), 10);
+    var onCc = parseInt(el.getAttribute('data-on-cc'), 10);
+    var offCc = parseInt(el.getAttribute('data-off-cc'), 10);
+    var hasOnOff = !isNaN(onCc) && !isNaN(offCc);
+    var toggle = el.hasAttribute('data-toggle');
+    var persistKey = isNote ? 'note:' + note : (hasOnOff ? 'btn:' + onCc : 'btn:' + cc);
+    var state = toggle ? !!loadVal(persistKey, false) : false;
+    var stateEl = el.querySelector('.btn-state');
+    function pulseNote() {
+      sendMessage({ type: 'noteon', note: note, velocity: 127 });
+      setTimeout(function () { sendMessage({ type: 'noteoff', note: note, velocity: 0 }); }, 50);
+    }
+    function pulseCc(controller) {
+      sendMessage({ type: 'cc', controller: controller, value: 127 });
+      setTimeout(function () { sendMessage({ type: 'cc', controller: controller, value: 0 }); }, 50);
+    }
+    function trigger() {
+      if (isNote) pulseNote();
+      else if (hasOnOff) pulseCc(state ? onCc : offCc);
+      else pulseCc(cc);
+    }
+    if (toggle) {
+      el.classList.toggle('on', state);
+      if (stateEl) stateEl.textContent = state ? 'ON' : 'OFF';
+      toggles.push({
+        reset: function () {
+          state = false;
+          el.classList.toggle('on', false);
+          if (stateEl) stateEl.textContent = 'OFF';
+          persist(persistKey, false);
+        }
+      });
+      // Register M/S buttons so Solo can unmute its sibling Mute
+      if (el.classList.contains('ms')) {
+        msRegistry[cc] = {
+          deactivate: function () {
+            if (!state) return; // already off
+            state = false;
+            el.classList.toggle('on', false);
+            if (stateEl) stateEl.textContent = 'OFF';
+            pulseCc(cc);
+            persist(persistKey, false);
+          }
+        };
+      }
+    }
+    el.addEventListener('pointerdown', function (e) {
+      e.preventDefault();
+      try { el.setPointerCapture(e.pointerId); } catch (err) {}
+      if (toggle) {
+        state = !state;
+        el.classList.toggle('on', state);
+        if (stateEl) stateEl.textContent = state ? 'ON' : 'OFF';
+        trigger();
+        persist(persistKey, state);
+        // Engaging Solo on a muted fader unmutes it
+        if (state && el.classList.contains('ms-solo')) {
+          var faderMs = el.closest('.fader-ms');
+          var muteEl = faderMs && faderMs.querySelector('.ms-mute');
+          if (muteEl) {
+            var muteCc = parseInt(muteEl.getAttribute('data-cc'), 10);
+            if (msRegistry[muteCc]) msRegistry[muteCc].deactivate();
+          }
+        }
+      } else {
+        el.classList.add('active');
+        trigger();
+      }
+    });
+    function release(e) {
+      e.preventDefault();
+      if (!toggle) {
+        el.classList.remove('active');
+      }
+    }
+    el.addEventListener('pointerup', release);
+    el.addEventListener('pointercancel', release);
+  }
+
+  // ---- PatchPad (fader + trigger in one control) ----------------------
+  // Drag vertically = set volume (CC). Quick tap = trigger note.
+  // Toggle pads (DRONE, RAIN) latch on/off; momentary pads fire once.
+  var patchPads = [];
+  function PatchPad(el) {
+    this.el = el;
+    this.cc = parseInt(el.getAttribute('data-cc'), 10);
+    this.note = parseInt(el.getAttribute('data-note'), 10);
+    this.toggle = el.hasAttribute('data-toggle');
+    this.volume = loadVal('cc:' + this.cc, 0);
+    this.state = this.toggle ? !!loadVal('note:' + this.note, false) : false;
+    this.fill = el.querySelector('.patchpad-fill');
+    this.stateEl = el.querySelector('.patchpad-state');
+    this.volEl = el.querySelector('.patchpad-vol');
+    this.activePointer = null;
+    this.lastSent = 0;
+    this.startY = 0;
+    this.startVol = 0;
+    this.dragging = false;
+    this.moved = false;
+    var self = this;
+    el.addEventListener('pointerdown', function (e) { self.down(e); });
+    el.addEventListener('pointermove', function (e) { self.move(e); });
+    el.addEventListener('pointerup', function (e) { self.up(e); });
+    el.addEventListener('pointercancel', function (e) { self.up(e); });
+    this.render();
+    patchPads.push(this);
+  }
+  PatchPad.prototype.render = function () {
+    var pct = (this.volume / 127) * 100;
+    this.fill.style.height = pct + '%';
+    if (this.volEl) this.volEl.textContent = String(this.volume);
+    if (this.stateEl) this.stateEl.textContent = this.state ? 'ON' : 'OFF';
+    this.el.classList.toggle('on', this.toggle && this.state);
+  };
+  PatchPad.prototype.volFromY = function (clientY) {
+    var rect = this.el.getBoundingClientRect();
+    var y = clientY - rect.top;
+    if (y < 0) y = 0; if (y > rect.height) y = rect.height;
+    var v = Math.round((1 - y / rect.height) * 127);
+    if (v < 0) v = 0; if (v > 127) v = 127;
+    return v;
+  };
+  PatchPad.prototype.sendVol = function (force) {
+    var now = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+    if (!force && (now - this.lastSent) < SEND_INTERVAL) return;
+    this.lastSent = now;
+    sendMessage({ type: 'cc', controller: this.cc, value: this.volume });
+    if (force) persist('cc:' + this.cc, this.volume);
+  };
+  PatchPad.prototype.trigger = function () {
+    var n = this.note;
+    if (this.toggle) {
+      this.state = !this.state;
+      this.render();
+      sendMessage({ type: 'noteon', note: n, velocity: 127 });
+      setTimeout(function () { sendMessage({ type: 'noteoff', note: n, velocity: 0 }); }, 50);
+      persist('note:' + n, this.state);
+    } else {
+      sendMessage({ type: 'noteon', note: n, velocity: 127 });
+      setTimeout(function () { sendMessage({ type: 'noteoff', note: n, velocity: 0 }); }, 50);
+    }
+  };
+  PatchPad.prototype.down = function (e) {
+    e.preventDefault();
+    this.activePointer = e.pointerId;
+    try { this.el.setPointerCapture(e.pointerId); } catch (err) {}
+    this.startY = e.clientY;
+    this.startVol = this.volume;
+    this.dragging = false;
+    this.moved = false;
+  };
+  PatchPad.prototype.move = function (e) {
+    if (e.pointerId !== this.activePointer) return;
+    e.preventDefault();
+    var dy = this.startY - e.clientY;
+    if (!this.dragging && Math.abs(dy) > 8) {
+      this.dragging = true;
+      this.el.classList.add('dragging');
+    }
+    if (this.dragging) {
+      this.moved = true;
+      this.volume = this.volFromY(e.clientY);
+      this.render();
+      this.sendVol(false);
+    }
+  };
+  PatchPad.prototype.up = function (e) {
+    if (e.pointerId !== this.activePointer) return;
+    e.preventDefault();
+    this.activePointer = null;
+    try { this.el.releasePointerCapture(e.pointerId); } catch (err) {}
+    this.el.classList.remove('dragging');
+    if (!this.moved) {
+      // tap — trigger the note
+      this.trigger();
+    } else {
+      // drag ended — flush final volume
+      this.sendVol(true);
+    }
+  };
+  PatchPad.prototype.resend = function () {
+    sendMessage({ type: 'cc', controller: this.cc, value: this.volume });
+  };
+  PatchPad.prototype.reset = function () {
+    this.volume = 0;
+    this.state = false;
+    this.render();
+    persist('cc:' + this.cc, 0);
+    persist('note:' + this.note, false);
+    this.sendVol(true);
+  };
+
+  // ---- Build all controls --------------------------------------------
+  var wheelEls = document.querySelectorAll('.wheel');
+  for (var wi = 0; wi < wheelEls.length; wi++) new Wheel(wheelEls[wi], wheelEls[wi].getAttribute('data-kind'));
+
+  var quadEl = document.querySelector('.quad');
+  if (quadEl) new Quad(quadEl);
+
+  var faderEls = document.querySelectorAll('.fader');
+  for (var i = 0; i < faderEls.length; i++) faders.push(new Fader(faderEls[i]));
+
+  var knobEls = document.querySelectorAll('.knob');
+  for (var k = 0; k < knobEls.length; k++) knobs.push(new Knob(knobEls[k]));
+
+  var btnEls = document.querySelectorAll('.btn, .ms');
+  for (var b = 0; b < btnEls.length; b++) bindButton(btnEls[b]);
+
+  var patchEls = document.querySelectorAll('.patchpad');
+  for (var p = 0; p < patchEls.length; p++) new PatchPad(patchEls[p]);
+
+  // ---- Panic ---------------------------------------------------------
+  var panicEl = document.getElementById('panic');
+  panicEl.addEventListener('pointerdown', function (e) {
+    e.preventDefault();
+    try { panicEl.setPointerCapture(e.pointerId); } catch (err) {}
+    panicEl.classList.add('active');
+    sendMessage({ type: 'panic' });
+  });
+  function panicRelease(e) { e.preventDefault(); panicEl.classList.remove('active'); }
+  panicEl.addEventListener('pointerup', panicRelease);
+  panicEl.addEventListener('pointercancel', panicRelease);
+
+  // ---- RESET to neutral ---------------------------------------------
+  var resetEl = document.getElementById('reset');
+  resetEl.addEventListener('pointerdown', function (e) {
+    e.preventDefault();
+    try { resetEl.setPointerCapture(e.pointerId); } catch (err) {}
+    resetEl.classList.add('active');
+    // continuous controls -> neutral
+    for (var f = 0; f < faders.length; f++) { faders[f].value = 0; faders[f].render(); persist('cc:' + faders[f].cc, 0); faders[f].send(true); }
+    for (var n = 0; n < knobs.length; n++) { knobs[n].value = 0; knobs[n].render(); persist('cc:' + knobs[n].cc, 0); knobs[n].send(true); }
+    perf.setPitch(8192, true);   // pitch center (springs)
+    perf.setMod(0, true);        // mod zero
+    // drone toggle -> off (local only; no MIDI flip to avoid turning it on)
+    for (var t = 0; t < toggles.length; t++) toggles[t].reset();
+    for (var tp = 0; tp < patchPads.length; tp++) patchPads[tp].reset();
+  });
+  function resetRelease(e) { e.preventDefault(); resetEl.classList.remove('active'); }
+  resetEl.addEventListener('pointerup', resetRelease);
+  resetEl.addEventListener('pointercancel', resetRelease);
+
+  // ---- All faders to 100% (requires two taps to confirm) -------------
+  var allUpEl = document.getElementById('allUp');
+  var allUpArmed = false;
+  var allUpArmTimer = null;
+  function fireAllUp() {
+    allUpEl.classList.add('active');
+    for (var f = 0; f < faders.length; f++) {
+      faders[f].value = 127;
+      faders[f].render();
+      persist('cc:' + faders[f].cc, 127);
+      faders[f].send(true);
+    }
+    for (var p = 0; p < patchPads.length; p++) {
+      patchPads[p].volume = 127;
+      patchPads[p].render();
+      persist('cc:' + patchPads[p].cc, 127);
+      patchPads[p].sendVol(true);
+    }
+    setTimeout(function () { allUpEl.classList.remove('active'); }, 200);
+  }
+  allUpEl.addEventListener('pointerdown', function (e) {
+    e.preventDefault();
+    try { allUpEl.setPointerCapture(e.pointerId); } catch (err) {}
+    if (!allUpArmed) {
+      allUpArmed = true;
+      allUpEl.classList.add('armed');
+      allUpEl.textContent = 'TAP AGAIN';
+      if (allUpArmTimer) clearTimeout(allUpArmTimer);
+      allUpArmTimer = setTimeout(function () {
+        allUpArmed = false;
+        allUpEl.classList.remove('armed');
+        allUpEl.textContent = 'FADERS 100%';
+      }, 1500);
+    } else {
+      if (allUpArmTimer) { clearTimeout(allUpArmTimer); allUpArmTimer = null; }
+      allUpArmed = false;
+      allUpEl.classList.remove('armed');
+      allUpEl.textContent = 'FADERS 100%';
+      fireAllUp();
+    }
+  });
+
+  // ---- Screens / tabs / swipe ---------------------------------------
+  var NUM_SCREENS = 5;
+  var currentScreen = 0;
+  var tabsEl = document.querySelector('.tabs');
+  var screensEl = document.querySelector('.screens');
+  var pagerEl = document.querySelector('.pager');
+  function showScreen(i) {
+    if (i < 0) i = 0; if (i >= NUM_SCREENS) i = NUM_SCREENS - 1;
+    currentScreen = i;
+    screensEl.style.transform = 'translateX(' + (-i * (100 / NUM_SCREENS)) + '%)';
+    var tabs = tabsEl.querySelectorAll('.tab');
+    for (var t = 0; t < tabs.length; t++) tabs[t].classList.toggle('active', t === i);
+  }
+  tabsEl.addEventListener('click', function (e) {
+    var tab = e.target.closest('.tab');
+    if (!tab) return;
+    showScreen(parseInt(tab.getAttribute('data-screen'), 10));
+  });
+  // Swipe: only from empty/section-title areas, never from a control
+  var sx = 0, sy = 0, swiping = false;
+  function isControlTarget(t) {
+    return !!(t.closest && t.closest('.fader-track,.knob-dial,.quad-pad,.wheel-track,.btn,.ms,.patchpad,#panic,#reset,#allUp,.tab'));
+  }
+  pagerEl.addEventListener('touchstart', function (e) {
+    var t = e.target;
+    if (isControlTarget(t)) { swiping = false; return; }
+    var touch = e.touches[0];
+    sx = touch.clientX; sy = touch.clientY; swiping = true;
+  }, { passive: true });
+  pagerEl.addEventListener('touchend', function (e) {
+    if (!swiping) return;
+    swiping = false;
+    var touch = e.changedTouches[0];
+    var dx = touch.clientX - sx, dy = touch.clientY - sy;
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 2) {
+      if (dx < 0) showScreen(currentScreen + 1); else showScreen(currentScreen - 1);
+    }
+  }, { passive: true });
+
+  // ---- WebSocket -----------------------------------------------------
+  function connect() {
+    var proto = location.protocol === 'https:' ? 'wss' : 'ws';
+    ws = new WebSocket(proto + '//' + location.host);
+    ws.onopen = function () {
+      setStatus(true);
+      reconnectDelay = 500;
+      for (var i = 0; i < faders.length; i++) faders[i].resend();
+      for (var j = 0; j < knobs.length; j++) knobs[j].resend();
+      for (var pp = 0; pp < patchPads.length; pp++) patchPads[pp].resend();
+      perf.resend();
+    };
+    ws.onclose = function () { setStatus(false); scheduleReconnect(); };
+    ws.onerror = function () { try { ws.close(); } catch (e) {} };
+  }
+  function scheduleReconnect() {
+    setTimeout(connect, reconnectDelay);
+    reconnectDelay = Math.min(reconnectDelay * 2, 8000);
+  }
+
+  // ---- Screen wake lock ---------------------------------------------
+  function requestWakeLock() {
+    try { if ('wakeLock' in navigator) navigator.wakeLock.request('screen').catch(function () {}); }
+    catch (e) {}
+  }
+  requestWakeLock();
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible') requestWakeLock();
+  });
+
+  // ---- Kill iOS gestures / callout / selection ----------------------
+  document.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+  function killGesture(e) { e.preventDefault(); }
+  ['gesturestart', 'gesturechange', 'gestureend'].forEach(function (t) {
+    document.addEventListener(t, killGesture, { passive: false });
+  });
+  document.addEventListener('touchmove', function (e) {
+    if (e.touches && e.touches.length > 1) e.preventDefault();
+  }, { passive: false });
+  document.addEventListener('dblclick', function (e) { e.preventDefault(); }, { passive: false });
+
+  connect();
+})();
+</script>
+</body>
+</html>
