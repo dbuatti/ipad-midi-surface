@@ -85,12 +85,25 @@
   }
   #reset.active { background: var(--accent); color: #001016; }
   #panicTop {
-    height: 32px; padding: 0 14px;
+    height: 32px; padding: 0 20px;
     border-radius: 8px; background: var(--panic); color: #fff;
-    border: 2px solid #000; font-size: 13px; font-weight: 900; letter-spacing: 2px;
+    border: 2px solid #000; font-size: 14px; font-weight: 900; letter-spacing: 3px;
     touch-action: none;
   }
   #panicTop.active { background: #fff; color: var(--panic); }
+  #lockOverlay {
+    position: fixed; inset: 0; z-index: 999;
+    background: rgba(0,0,0,0.85);
+    display: none; align-items: center; justify-content: center;
+    flex-direction: column; gap: 20px;
+    touch-action: none;
+  }
+  body.locked #lockOverlay { display: flex; }
+  #lockOverlay .lock-icon { font-size: 48px; }
+  #lockOverlay .lock-text { font-size: 16px; font-weight: 800; letter-spacing: 3px; color: var(--text-dim); }
+  #lockOverlay .lock-hint { font-size: 11px; color: var(--text-dim); }
+  body.locked #status, body.locked .tabs, body.locked .screen-dots, body.locked #ipBar { pointer-events: none; }
+  body.locked #panicTop { pointer-events: auto; position: fixed; top: 8px; left: 50%; transform: translateX(-50%); z-index: 1001; }
   #allUp { color: var(--accent); border-color: var(--accent-dim); }
   #allUp.armed { background: var(--accent); color: #001016; animation: pulse 0.6s infinite; }
   @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.45; } }
@@ -121,6 +134,34 @@
     display: none;
   }
   .tab.has-active .badge { display: block; }
+
+  /* ---- Mute-all / Unmute-all ---- */
+  .mute-all-row { display: flex; gap: 8px; flex: 0 0 auto; }
+  .mute-all-btn {
+    flex: 1 1 0; height: 40px; border-radius: 8px;
+    background: #1d2530; color: var(--text);
+    border: 2px solid #000; font-size: 13px; font-weight: 800; letter-spacing: 1px;
+    touch-action: none;
+  }
+  .mute-all-btn.active { background: var(--accent); color: #001016; }
+  #muteAll { color: #ff5252; }
+  #muteAll.active { background: #ff5252; color: #fff; }
+  #unmuteAll { color: var(--good); }
+  #unmuteAll.active { background: var(--good); color: #001016; }
+
+  /* ---- Screen position dots ---- */
+  .screen-dots {
+    display: flex; justify-content: center; gap: 7px;
+    padding: 5px; background: var(--panel);
+    border-bottom: 1px solid #000;
+    flex: 0 0 auto;
+  }
+  .screen-dots .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #333;
+    transition: background .2s, box-shadow .2s;
+  }
+  .screen-dots .dot.active { background: var(--accent); box-shadow: 0 0 5px var(--accent); }
 
   /* ---- Pager / screens ---- */
   .pager { flex: 1 1 auto; position: relative; overflow: hidden; min-height: 0; }
@@ -175,6 +216,13 @@
   .fader { flex: 1 1 0; display: flex; flex-direction: column; align-items: center; background: var(--panel); border-radius: 12px; padding: 8px 4px; border: 1px solid #000; min-width: 0; }
   .fader-value { font-size: 22px; font-weight: 800; line-height: 1; color: var(--accent); font-variant-numeric: tabular-nums; min-height: 24px; }
   .fader-track { position: relative; flex: 1 1 auto; width: 52px; min-height: 0; background: var(--track); border-radius: 26px; border: 1px solid #000; touch-action: none; overflow: hidden; }
+  .fader-track::before {
+    content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 1;
+    background:
+      linear-gradient(to bottom, transparent 24.5%, rgba(255,255,255,0.1) 25%, transparent 25.5%),
+      linear-gradient(to bottom, transparent 49.5%, rgba(255,255,255,0.15) 50%, transparent 50.5%),
+      linear-gradient(to bottom, transparent 74.5%, rgba(255,255,255,0.1) 75%, transparent 75.5%);
+  }
   .fader-fill { position: absolute; left: 0; right: 0; bottom: 0; background: linear-gradient(180deg, var(--accent), var(--accent-dim)); border-radius: 0 0 26px 26px; height: 0%; }
   .fader-handle { position: absolute; left: 50%; transform: translate(-50%, 50%); bottom: 0%; width: 72px; height: 34px; background: #e8eef3; border: 2px solid #000; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.6); }
   .fader-label {
@@ -205,8 +253,8 @@
   /* ---- Knobs ---- */
   .knobs { display: flex; gap: 8px; flex: 0 0 auto; }
   .knob { flex: 1 1 0; display: flex; flex-direction: column; align-items: center; min-width: 0; }
-  .knob-dial { position: relative; width: 58px; height: 58px; border-radius: 50%; background: radial-gradient(circle at 50% 38%, #2a3340, #14181f); border: 2px solid #000; box-shadow: inset 0 2px 6px rgba(0,0,0,0.6); touch-action: none; }
-  .knob-indicator { position: absolute; left: 50%; top: 5px; width: 4px; height: 20px; background: var(--accent); border-radius: 2px; transform: translateX(-50%); }
+  .knob-dial { position: relative; width: 72px; height: 72px; border-radius: 50%; background: radial-gradient(circle at 50% 38%, #2a3340, #14181f); border: 2px solid #000; box-shadow: inset 0 2px 6px rgba(0,0,0,0.6); touch-action: none; }
+  .knob-indicator { position: absolute; left: 50%; top: 6px; width: 4px; height: 24px; background: var(--accent); border-radius: 2px; transform: translateX(-50%); }
   .knob-value { font-size: 17px; font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums; margin-top: 6px; min-height: 19px; }
   .knob-label { font-size: 12px; font-weight: 700; color: var(--text); margin-top: 2px; }
 
@@ -302,6 +350,12 @@
 </style>
 </head>
 <body>
+  <div id="lockOverlay">
+    <div class="lock-icon">🔒</div>
+    <div class="lock-text">PERFORMANCE LOCKED</div>
+    <div class="lock-hint">Long-press here to unlock</div>
+  </div>
+
   <div id="status">
     <span class="dot"></span>
     <span class="label">Connecting…</span>
@@ -321,6 +375,7 @@
       <button class="tab" type="button" data-screen="3">REVERB</button>
       <button class="tab" type="button" data-screen="4">EQ</button>
     </nav>
+    <div class="screen-dots" id="screenDots"></div>
 
     <div class="pager">
       <div class="screens">
@@ -383,6 +438,10 @@
             <div class="fader" data-cc="26"><div class="fader-value">0</div><div class="fader-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">F7</div><div class="fader-ms"><button class="ms ms-mute" type="button" data-cc="56" data-toggle="1">M</button><button class="ms ms-solo" type="button" data-cc="76" data-toggle="1">S</button></div></div>
             <div class="fader" data-cc="28"><div class="fader-value">0</div><div class="fader-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">F8</div><div class="fader-ms"><button class="ms ms-mute" type="button" data-cc="58" data-toggle="1">M</button><button class="ms ms-solo" type="button" data-cc="77" data-toggle="1">S</button></div></div>
             <div class="fader" data-cc="27"><div class="fader-value">0</div><div class="fader-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">MASTER</div><div class="fader-ms"><button class="ms ms-mute" type="button" data-cc="57" data-toggle="1">M</button></div></div>
+          </div>
+          <div class="mute-all-row">
+            <button class="mute-all-btn" type="button" id="muteAll">MUTE ALL</button>
+            <button class="mute-all-btn" type="button" id="unmuteAll">UNMUTE ALL</button>
           </div>
           <div class="section-title">Knobs</div>
           <div class="knobs">
@@ -1083,6 +1142,31 @@
   var patchEls = document.querySelectorAll('.patchpad');
   for (var p = 0; p < patchEls.length; p++) new PatchPad(patchEls[p]);
 
+  // ---- Mute-all / Unmute-all (MIX screen) -----------------------------
+  var muteAllEl = document.getElementById('muteAll');
+  var unmuteAllEl = document.getElementById('unmuteAll');
+  muteAllEl.addEventListener('pointerdown', function (e) {
+    e.preventDefault(); haptic(20);
+    // Activate all mute buttons (mute all channels, not master)
+    for (var key in msRegistry) {
+      var muteCc = parseInt(key, 10);
+      if (muteCc >= 50 && muteCc <= 58) {
+        // Find the mute button element
+        var muteBtn = document.querySelector('.ms-mute[data-cc="' + muteCc + '"]');
+        if (muteBtn && !muteBtn.classList.contains('on')) {
+          muteBtn.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true }));
+        }
+      }
+    }
+  });
+  unmuteAllEl.addEventListener('pointerdown', function (e) {
+    e.preventDefault(); haptic(20);
+    // Deactivate all mute buttons
+    for (var key in msRegistry) {
+      msRegistry[key].deactivate();
+    }
+  });
+
   // ---- Panic (big PATCH button + global status-bar button) -----------
   function firePanic() { haptic(30); sendMessage({ type: 'panic' }); }
   var panicEl = document.getElementById('panic');
@@ -1253,12 +1337,21 @@
   var tabsEl = document.querySelector('.tabs');
   var screensEl = document.querySelector('.screens');
   var pagerEl = document.querySelector('.pager');
+  var screenDotsEl = document.getElementById('screenDots');
+  // Build dots
+  for (var d = 0; d < NUM_SCREENS; d++) {
+    var dot = document.createElement('span');
+    dot.className = 'dot' + (d === 0 ? ' active' : '');
+    screenDotsEl.appendChild(dot);
+  }
   function showScreen(i) {
     if (i < 0) i = 0; if (i >= NUM_SCREENS) i = NUM_SCREENS - 1;
     currentScreen = i;
     screensEl.style.transform = 'translateX(' + (-i * (100 / NUM_SCREENS)) + '%)';
     var tabs = tabsEl.querySelectorAll('.tab');
     for (var t = 0; t < tabs.length; t++) tabs[t].classList.toggle('active', t === i);
+    var dots = screenDotsEl.querySelectorAll('.dot');
+    for (var dt = 0; dt < dots.length; dt++) dots[dt].classList.toggle('active', dt === i);
   }
   tabsEl.addEventListener('click', function (e) {
     var tab = e.target.closest('.tab');
@@ -1268,7 +1361,7 @@
   // Swipe: only from empty/section-title areas, never from a control
   var sx = 0, sy = 0, swiping = false;
   function isControlTarget(t) {
-    return !!(t.closest && t.closest('.fader-track,.knob-dial,.quad-pad,.wheel-track,.btn,.ms,.patchpad,.scene,#panic,#panicTop,#reset,#allUp,.tab'));
+    return !!(t.closest && t.closest('.fader-track,.knob-dial,.quad-pad,.wheel-track,.btn,.ms,.patchpad,.scene,.mute-all-btn,#panic,#panicTop,#reset,#allUp,#lockOverlay,.tab'));
   }
   pagerEl.addEventListener('touchstart', function (e) {
     var t = e.target;
@@ -1326,6 +1419,34 @@
     if (e.touches && e.touches.length > 1) e.preventDefault();
   }, { passive: false });
   document.addEventListener('dblclick', function (e) { e.preventDefault(); }, { passive: false });
+
+  // ---- Performance lock (long-press status bar or lock overlay) -------
+  var lockTimer = null;
+  var LOCK_DELAY = 1500;
+  function toggleLock() {
+    document.body.classList.toggle('locked');
+    haptic(30);
+    if (document.body.classList.contains('locked')) {
+      statusLabel.textContent = 'LOCKED';
+    } else {
+      setStatus(ws && ws.readyState === WebSocket.OPEN);
+    }
+  }
+  function startLockTimer(e) {
+    e.preventDefault();
+    lockTimer = setTimeout(function () { toggleLock(); lockTimer = null; }, LOCK_DELAY);
+  }
+  function cancelLockTimer(e) {
+    if (lockTimer) { clearTimeout(lockTimer); lockTimer = null; }
+  }
+  statusEl.addEventListener('pointerdown', startLockTimer);
+  statusEl.addEventListener('pointerup', cancelLockTimer);
+  statusEl.addEventListener('pointercancel', cancelLockTimer);
+  statusEl.addEventListener('pointerleave', cancelLockTimer);
+  var lockOverlayEl = document.getElementById('lockOverlay');
+  lockOverlayEl.addEventListener('pointerdown', startLockTimer);
+  lockOverlayEl.addEventListener('pointerup', cancelLockTimer);
+  lockOverlayEl.addEventListener('pointercancel', cancelLockTimer);
 
   // ---- Fetch and display Mac's IP addresses (including Tailscale) ----
   function fetchIPs() {
