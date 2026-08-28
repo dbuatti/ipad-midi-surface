@@ -398,6 +398,17 @@
     flex: 0 0 64px;
   }
   .eq-strip-master .fader-label { font-size: 8px; }
+  /* EQ horizontal sliders (replace knobs for freq/Q) */
+  .eq-slider { width: 100%; flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .eq-slider-track {
+    position: relative; width: 90%; height: 28px; border-radius: 14px;
+    background: var(--track); border: 1px solid var(--border); touch-action: none; overflow: hidden;
+  }
+  .eq-slider-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0%; background: var(--accent-grad); border-radius: 14px 0 0 14px; }
+  .eq-slider-handle { position: absolute; top: 50%; left: 0%; transform: translate(-50%, -50%); width: 20px; height: 32px; background: #d8dee4; border: 1px solid var(--border); border-radius: 6px; box-shadow: 0 1px 4px rgba(0,0,0,0.5); }
+  .eq-slider-row { display: flex; align-items: center; gap: 4px; width: 100%; }
+  .eq-slider-label { font-size: 9px; font-weight: 700; color: var(--text-dim); flex: 0 0 auto; width: 24px; text-align: right; }
+  .eq-slider-value { font-size: 12px; font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums; flex: 0 0 auto; width: 28px; text-align: left; }
 
   /* ---- Panic ---- */
   #panic {
@@ -601,26 +612,26 @@
             <div class="eq-strip">
               <button class="eq-band-on ms" type="button" data-cc="116" data-toggle="1">ON</button>
               <div class="fader" data-cc="102"><div class="fader-value">0.0</div><div class="fader-track eq-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">LOW SHELF</div></div>
-              <div class="knob" data-cc="106"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">FREQ</div></div>
-              <div class="knob" data-cc="111"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">Q</div></div>
+              <div class="eq-slider" data-cc="106"><div class="eq-slider-row"><span class="eq-slider-label">FQ</span><div class="eq-slider-track"><div class="eq-slider-fill"></div><div class="eq-slider-handle"></div></div><span class="eq-slider-value">0</span></div></div>
+              <div class="eq-slider" data-cc="111"><div class="eq-slider-row"><span class="eq-slider-label">Q</span><div class="eq-slider-track"><div class="eq-slider-fill"></div><div class="eq-slider-handle"></div></div><span class="eq-slider-value">0</span></div></div>
             </div>
             <div class="eq-strip">
               <button class="eq-band-on ms" type="button" data-cc="117" data-toggle="1">ON</button>
               <div class="fader" data-cc="103"><div class="fader-value">0.0</div><div class="fader-track eq-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">PEAK 1</div></div>
-              <div class="knob" data-cc="107"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">FREQ</div></div>
-              <div class="knob" data-cc="112"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">Q</div></div>
+              <div class="eq-slider" data-cc="107"><div class="eq-slider-row"><span class="eq-slider-label">FQ</span><div class="eq-slider-track"><div class="eq-slider-fill"></div><div class="eq-slider-handle"></div></div><span class="eq-slider-value">0</span></div></div>
+              <div class="eq-slider" data-cc="112"><div class="eq-slider-row"><span class="eq-slider-label">Q</span><div class="eq-slider-track"><div class="eq-slider-fill"></div><div class="eq-slider-handle"></div></div><span class="eq-slider-value">0</span></div></div>
             </div>
             <div class="eq-strip">
               <button class="eq-band-on ms" type="button" data-cc="118" data-toggle="1">ON</button>
               <div class="fader" data-cc="104"><div class="fader-value">0.0</div><div class="fader-track eq-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">PEAK 2</div></div>
-              <div class="knob" data-cc="108"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">FREQ</div></div>
-              <div class="knob" data-cc="113"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">Q</div></div>
+              <div class="eq-slider" data-cc="108"><div class="eq-slider-row"><span class="eq-slider-label">FQ</span><div class="eq-slider-track"><div class="eq-slider-fill"></div><div class="eq-slider-handle"></div></div><span class="eq-slider-value">0</span></div></div>
+              <div class="eq-slider" data-cc="113"><div class="eq-slider-row"><span class="eq-slider-label">Q</span><div class="eq-slider-track"><div class="eq-slider-fill"></div><div class="eq-slider-handle"></div></div><span class="eq-slider-value">0</span></div></div>
             </div>
             <div class="eq-strip">
               <button class="eq-band-on ms" type="button" data-cc="119" data-toggle="1">ON</button>
               <div class="fader" data-cc="105"><div class="fader-value">0.0</div><div class="fader-track eq-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">HIGH SHELF</div></div>
-              <div class="knob" data-cc="109"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">FREQ</div></div>
-              <div class="knob" data-cc="114"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">Q</div></div>
+              <div class="eq-slider" data-cc="109"><div class="eq-slider-row"><span class="eq-slider-label">FQ</span><div class="eq-slider-track"><div class="eq-slider-fill"></div><div class="eq-slider-handle"></div></div><span class="eq-slider-value">0</span></div></div>
+              <div class="eq-slider" data-cc="114"><div class="eq-slider-row"><span class="eq-slider-label">Q</span><div class="eq-slider-track"><div class="eq-slider-fill"></div><div class="eq-slider-handle"></div></div><span class="eq-slider-value">0</span></div></div>
             </div>
             <div class="eq-strip eq-strip-master">
               <div style="height:30px;display:flex;align-items:center;font-size:9px;font-weight:800;color:var(--text-dim);letter-spacing:1px;">OUT</div>
@@ -1242,6 +1253,75 @@
     this.sendVol(true);
   };
 
+  // ---- EQ horizontal slider ------------------------------------------
+  var eqSliders = [];
+  function EqSlider(el) {
+    this.el = el;
+    this.cc = parseInt(el.getAttribute('data-cc'), 10);
+    this.value = loadVal('cc:' + this.cc, 0);
+    this.track = el.querySelector('.eq-slider-track');
+    this.fill = el.querySelector('.eq-slider-fill');
+    this.handle = el.querySelector('.eq-slider-handle');
+    this.valueEl = el.querySelector('.eq-slider-value');
+    this.activePointer = null;
+    this.lastSent = 0;
+    var self = this;
+    this.track.addEventListener('pointerdown', function (e) { self.down(e); });
+    this.track.addEventListener('pointermove', function (e) { self.move(e); });
+    this.track.addEventListener('pointerup', function (e) { self.up(e); });
+    this.track.addEventListener('pointercancel', function (e) { self.up(e); });
+    this.render();
+    eqSliders.push(this);
+  }
+  EqSlider.prototype.render = function () {
+    var pct = (this.value / 127) * 100;
+    this.fill.style.width = pct + '%';
+    this.handle.style.left = pct + '%';
+    this.valueEl.textContent = String(this.value);
+  };
+  EqSlider.prototype.valueFromEvent = function (e) {
+    var rect = this.track.getBoundingClientRect();
+    var x = e.clientX - rect.left;
+    if (x < 0) x = 0; if (x > rect.width) x = rect.width;
+    var v = Math.round((x / rect.width) * 127);
+    if (v < 0) v = 0; if (v > 127) v = 127;
+    return v;
+  };
+  EqSlider.prototype.down = function (e) {
+    e.preventDefault(); haptic(8);
+    this.activePointer = e.pointerId;
+    var now = Date.now();
+    if (this._lastTap && (now - this._lastTap) < 350) {
+      this.value = 0; this.render(); this.send(true); haptic(15); this._lastTap = 0; return;
+    }
+    this._lastTap = now;
+    try { this.track.setPointerCapture(e.pointerId); } catch (err) {}
+    this.value = this.valueFromEvent(e);
+    this.render(); this.send(false);
+  };
+  EqSlider.prototype.move = function (e) {
+    if (e.pointerId !== this.activePointer) return;
+    e.preventDefault();
+    this.value = this.valueFromEvent(e);
+    this.render(); this.send(false);
+  };
+  EqSlider.prototype.up = function (e) {
+    if (e.pointerId !== this.activePointer) return;
+    e.preventDefault();
+    this.activePointer = null;
+    try { this.track.releasePointerCapture(e.pointerId); } catch (err) {}
+    this.send(true);
+  };
+  EqSlider.prototype.send = function (force) {
+    var now = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+    if (!force && (now - this.lastSent) < SEND_INTERVAL) return;
+    this.lastSent = now;
+    sendMessage({ type: 'cc', controller: this.cc, value: this.value });
+    if (force) persist('cc:' + this.cc, this.value);
+  };
+  EqSlider.prototype.resend = function () { this.send(true); };
+  EqSlider.prototype.reset = function () { this.value = 0; this.render(); persist('cc:' + this.cc, 0); this.send(true); };
+
   // ---- Build all controls --------------------------------------------
   var wheelEls = document.querySelectorAll('.wheel');
   for (var wi = 0; wi < wheelEls.length; wi++) new Wheel(wheelEls[wi], wheelEls[wi].getAttribute('data-kind'));
@@ -1254,6 +1334,9 @@
 
   var knobEls = document.querySelectorAll('.knob');
   for (var k = 0; k < knobEls.length; k++) knobs.push(new Knob(knobEls[k]));
+
+  var eqSliderEls = document.querySelectorAll('.eq-slider');
+  for (var es = 0; es < eqSliderEls.length; es++) new EqSlider(eqSliderEls[es]);
 
   var btnEls = document.querySelectorAll('.btn, .ms');
   for (var b = 0; b < btnEls.length; b++) bindButton(btnEls[b]);
@@ -1302,6 +1385,7 @@
         knobs[n].value = 0; knobs[n].render(); persist('cc:' + knobs[n].cc, 0); knobs[n].send(true);
       }
     }
+    for (var es = 0; es < eqSliders.length; es++) eqSliders[es].reset();
     setTimeout(function () { eqFlatEl.classList.remove('active'); }, 200);
   });
 
@@ -1500,7 +1584,7 @@
   // Swipe: only from empty/section-title areas, never from a control
   var sx = 0, sy = 0, swiping = false;
   function isControlTarget(t) {
-    return !!(t.closest && t.closest('.fader-track,.knob-dial,.quad-pad,.wheel-track,.btn,.ms,.patchpad,.scene-pill,.mute-all-btn,.eq-band-on,#panic,#panicTop,#reset,#allUp,#eqFlat,#lockOverlay,.tab'));
+    return !!(t.closest && t.closest('.fader-track,.knob-dial,.quad-pad,.wheel-track,.btn,.ms,.patchpad,.scene-pill,.mute-all-btn,.eq-band-on,.eq-slider-track,#panic,#panicTop,#reset,#allUp,#eqFlat,#lockOverlay,.tab'));
   }
   pagerEl.addEventListener('touchstart', function (e) {
     var t = e.target;
@@ -1528,6 +1612,7 @@
       for (var i = 0; i < faders.length; i++) faders[i].resend();
       for (var j = 0; j < knobs.length; j++) knobs[j].resend();
       for (var pp = 0; pp < patchPads.length; pp++) patchPads[pp].resend();
+      for (var es2 = 0; es2 < eqSliders.length; es2++) eqSliders[es2].resend();
       perf.resend();
     };
     ws.onclose = function () { setStatus(false); scheduleReconnect(); };
