@@ -79,6 +79,12 @@
   .scene-pill.stored { color: var(--accent); border-color: var(--accent-dim); background: #0a2a30; }
   .scene-pill.stored:active { background: var(--accent-dim); }
   .scene-pill.saving { background: var(--accent); color: #000; animation: pulse 0.5s infinite; }
+  #saveFlash {
+    position: fixed; inset: 0; z-index: 998; pointer-events: none;
+    background: var(--accent); opacity: 0;
+    transition: opacity .08s ease-out;
+  }
+  #saveFlash.show { opacity: 0.18; transition: opacity .08s ease-in; }
   #ipBar {
     display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
     padding: 4px 14px;
@@ -408,6 +414,7 @@
 </style>
 </head>
 <body>
+  <div id="saveFlash"></div>
   <div id="lockOverlay">
     <div class="lock-icon">🔒</div>
     <div class="lock-text">PERFORMANCE LOCKED</div>
@@ -1432,6 +1439,8 @@
             persist(SCENE_KEYS[idx], { name: 'Scene ' + (idx + 1), state: state });
             el.classList.add('saving');
             haptic(30);
+            var flash = document.getElementById('saveFlash');
+            if (flash) { flash.classList.add('show'); setTimeout(function () { flash.classList.remove('show'); }, 500); }
             setTimeout(function () { el.classList.remove('saving'); refreshSceneButtons(); }, 600);
             saveTimer = null;
           }, 800);
