@@ -446,7 +446,7 @@
             <div class="fader" data-cc="24"><div class="fader-value">0</div><div class="fader-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">F5</div><div class="fader-ms"><button class="ms ms-mute" type="button" data-cc="54" data-toggle="1">M</button><button class="ms ms-solo" type="button" data-cc="74" data-toggle="1">S</button></div></div>
             <div class="fader" data-cc="25"><div class="fader-value">0</div><div class="fader-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">F6</div><div class="fader-ms"><button class="ms ms-mute" type="button" data-cc="55" data-toggle="1">M</button><button class="ms ms-solo" type="button" data-cc="75" data-toggle="1">S</button></div></div>
             <div class="fader" data-cc="26"><div class="fader-value">0</div><div class="fader-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">F7</div><div class="fader-ms"><button class="ms ms-mute" type="button" data-cc="56" data-toggle="1">M</button><button class="ms ms-solo" type="button" data-cc="76" data-toggle="1">S</button></div></div>
-            <div class="fader" data-cc="28"><div class="fader-value">0</div><div class="fader-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">F8</div><div class="fader-ms"><button class="ms ms-mute" type="button" data-cc="58" data-toggle="1">M</button><button class="ms ms-solo" type="button" data-cc="77" data-toggle="1">S</button></div></div>
+            <div class="fader" data-cc="28"><div class="fader-value">0</div><div class="fader-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">MIC</div><div class="fader-ms"><button class="ms ms-mute" type="button" data-cc="58" data-toggle="1">M</button><button class="ms ms-solo" type="button" data-cc="77" data-toggle="1">S</button></div></div>
             <div class="fader" data-cc="27"><div class="fader-value">0</div><div class="fader-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">MASTER</div><div class="fader-ms"><button class="ms ms-mute" type="button" data-cc="57" data-toggle="1">M</button></div></div>
           </div>
           <div class="mute-all-row">
@@ -857,7 +857,7 @@
   };
   Fader.prototype.resend = function () { this.send(true); };
 
-  // ---- Knob (vertical drag) ------------------------------------------
+  // ---- Knob (rotary / circular drag) --------------------------------
   function Knob(el) {
     this.el = el;
     this.cc = parseInt(el.getAttribute('data-cc'), 10);
@@ -866,8 +866,7 @@
     this.valueEl = el.querySelector('.knob-value');
     this.activePointer = null;
     this.lastSent = 0;
-    this.startY = 0;
-    this.startVal = 0;
+    this.lastAngle = 0;
     var self = this;
     this.dial.addEventListener('pointerdown', function (e) { self.down(e); });
     this.dial.addEventListener('pointermove', function (e) { self.move(e); });
@@ -879,6 +878,12 @@
     this.valueEl.textContent = String(this.value);
     var deg = -135 + (this.value / 127) * 270;
     this.dial.style.transform = 'rotate(' + deg + 'deg)';
+  };
+  Knob.prototype.angleFromCenter = function (e) {
+    var rect = this.dial.getBoundingClientRect();
+    var cx = rect.left + rect.width / 2;
+    var cy = rect.top + rect.height / 2;
+    return Math.atan2(e.clientY - cy, e.clientX - cx) * 180 / Math.PI;
   };
   Knob.prototype.down = function (e) {
     e.preventDefault();
@@ -893,15 +898,20 @@
     }
     this._lastTap = now;
     try { this.dial.setPointerCapture(e.pointerId); } catch (err) {}
-    this.startY = e.clientY;
-    this.startVal = this.value;
+    this.lastAngle = this.angleFromCenter(e);
     this.send(false);
   };
   Knob.prototype.move = function (e) {
     if (e.pointerId !== this.activePointer) return;
     e.preventDefault();
-    var dy = this.startY - e.clientY;
-    var v = this.startVal + (dy / 200) * 127;
+    var angle = this.angleFromCenter(e);
+    var delta = angle - this.lastAngle;
+    // handle wraparound at ±180
+    if (delta > 180) delta -= 360;
+    if (delta < -180) delta += 360;
+    this.lastAngle = angle;
+    // 270° of rotation = full range (0-127)
+    var v = this.value + (delta / 270) * 127;
     if (v < 0) v = 0; if (v > 127) v = 127;
     this.value = Math.round(v);
     this.render();
