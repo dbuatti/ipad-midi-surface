@@ -443,9 +443,9 @@
             <div class="fader" data-cc="21"><div class="fader-value">0</div><div class="fader-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">FELT PIANO</div><div class="fader-ms"><button class="ms ms-mute" type="button" data-cc="51" data-toggle="1">M</button><button class="ms ms-solo" type="button" data-cc="71" data-toggle="1">S</button></div></div>
             <div class="fader" data-cc="22"><div class="fader-value">0</div><div class="fader-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">STRINGS</div><div class="fader-ms"><button class="ms ms-mute" type="button" data-cc="52" data-toggle="1">M</button><button class="ms ms-solo" type="button" data-cc="72" data-toggle="1">S</button></div></div>
             <div class="fader" data-cc="23"><div class="fader-value">0</div><div class="fader-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">PADS</div><div class="fader-ms"><button class="ms ms-mute" type="button" data-cc="53" data-toggle="1">M</button><button class="ms ms-solo" type="button" data-cc="73" data-toggle="1">S</button></div></div>
-            <div class="fader" data-cc="24"><div class="fader-value">0</div><div class="fader-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">F5</div><div class="fader-ms"><button class="ms ms-mute" type="button" data-cc="54" data-toggle="1">M</button><button class="ms ms-solo" type="button" data-cc="74" data-toggle="1">S</button></div></div>
-            <div class="fader" data-cc="25"><div class="fader-value">0</div><div class="fader-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">F6</div><div class="fader-ms"><button class="ms ms-mute" type="button" data-cc="55" data-toggle="1">M</button><button class="ms ms-solo" type="button" data-cc="75" data-toggle="1">S</button></div></div>
-            <div class="fader" data-cc="26"><div class="fader-value">0</div><div class="fader-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">F7</div><div class="fader-ms"><button class="ms ms-mute" type="button" data-cc="56" data-toggle="1">M</button><button class="ms ms-solo" type="button" data-cc="76" data-toggle="1">S</button></div></div>
+            <div class="fader" data-cc="24"><div class="fader-value">0</div><div class="fader-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">SUNNY EP</div><div class="fader-ms"><button class="ms ms-mute" type="button" data-cc="54" data-toggle="1">M</button><button class="ms ms-solo" type="button" data-cc="74" data-toggle="1">S</button></div></div>
+            <div class="fader" data-cc="25"><div class="fader-value">0</div><div class="fader-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">WATER EP</div><div class="fader-ms"><button class="ms ms-mute" type="button" data-cc="55" data-toggle="1">M</button><button class="ms ms-solo" type="button" data-cc="75" data-toggle="1">S</button></div></div>
+            <div class="fader" data-cc="26"><div class="fader-value">0</div><div class="fader-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">RESONANCE DIS.</div><div class="fader-ms"><button class="ms ms-mute" type="button" data-cc="56" data-toggle="1">M</button><button class="ms ms-solo" type="button" data-cc="76" data-toggle="1">S</button></div></div>
             <div class="fader" data-cc="28"><div class="fader-value">0</div><div class="fader-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">MIC</div><div class="fader-ms"><button class="ms ms-mute" type="button" data-cc="58" data-toggle="1">M</button><button class="ms ms-solo" type="button" data-cc="77" data-toggle="1">S</button></div></div>
             <div class="fader" data-cc="27"><div class="fader-value">0</div><div class="fader-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">MASTER</div><div class="fader-ms"><button class="ms ms-mute" type="button" data-cc="57" data-toggle="1">M</button></div></div>
           </div>
@@ -533,31 +533,32 @@
 
         <!-- SCREEN 4: EQ -->
         <section class="screen" id="screen-eq">
-          <div class="section-title">EQ — 4-band parametric</div>
-          <div class="btn btn-toggle eq-power" data-cc="101" data-toggle="1" style="min-height:56px;font-size:18px;">
-            <span class="btn-cap">EQ</span>
+          <div class="section-title">Channel EQ — Bypass + 4 bands + Master Gain</div>
+          <div class="btn btn-toggle eq-power" data-cc="101" data-toggle="1" style="min-height:48px;font-size:16px;">
+            <span class="btn-cap">BYPASS</span>
             <span class="btn-state">OFF</span>
           </div>
-          <div class="section-title">Gain (boost / cut)</div>
+          <div class="section-title">Band Gain (boost / cut)</div>
           <div class="faders" style="flex:1 1 auto;min-height:0;">
-            <div class="fader" data-cc="102"><div class="fader-value">0%</div><div class="fader-track eq-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">LOW</div></div>
-            <div class="fader" data-cc="103"><div class="fader-value">0%</div><div class="fader-track eq-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">LO-MID</div></div>
-            <div class="fader" data-cc="104"><div class="fader-value">0%</div><div class="fader-track eq-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">HI-MID</div></div>
-            <div class="fader" data-cc="105"><div class="fader-value">0%</div><div class="fader-track eq-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">HIGH</div></div>
+            <div class="fader" data-cc="102"><div class="fader-value">0%</div><div class="fader-track eq-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">LOW SHELF</div></div>
+            <div class="fader" data-cc="103"><div class="fader-value">0%</div><div class="fader-track eq-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">PEAK 1</div></div>
+            <div class="fader" data-cc="104"><div class="fader-value">0%</div><div class="fader-track eq-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">PEAK 2</div></div>
+            <div class="fader" data-cc="105"><div class="fader-value">0%</div><div class="fader-track eq-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">HIGH SHELF</div></div>
+            <div class="fader" data-cc="115"><div class="fader-value">0%</div><div class="fader-track eq-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">MASTER GAIN</div></div>
           </div>
           <div class="section-title">Frequency</div>
           <div class="knobs">
-            <div class="knob" data-cc="106"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">LOW FQ</div></div>
-            <div class="knob" data-cc="107"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">LM FQ</div></div>
-            <div class="knob" data-cc="108"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">HM FQ</div></div>
-            <div class="knob" data-cc="109"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">HI FQ</div></div>
+            <div class="knob" data-cc="106"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">LS FREQ</div></div>
+            <div class="knob" data-cc="107"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">PK1 FREQ</div></div>
+            <div class="knob" data-cc="108"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">PK2 FREQ</div></div>
+            <div class="knob" data-cc="109"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">HS FREQ</div></div>
           </div>
-          <div class="section-title">Q (resonance)</div>
+          <div class="section-title">Q-Factor</div>
           <div class="knobs">
-            <div class="knob" data-cc="111"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">LOW Q</div></div>
-            <div class="knob" data-cc="112"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">LM Q</div></div>
-            <div class="knob" data-cc="113"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">HM Q</div></div>
-            <div class="knob" data-cc="114"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">HI Q</div></div>
+            <div class="knob" data-cc="111"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">LS Q</div></div>
+            <div class="knob" data-cc="112"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">PK1 Q</div></div>
+            <div class="knob" data-cc="113"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">PK2 Q</div></div>
+            <div class="knob" data-cc="114"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">HS Q</div></div>
           </div>
         </section>
     </div>

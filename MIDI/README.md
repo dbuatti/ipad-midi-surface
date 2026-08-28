@@ -147,19 +147,20 @@ no Safari toolbars and the screen stays awake.
 | Reverb WIDTH    | rotary knob       | 98 | 16   |
 | Reverb DIFF     | rotary knob       | 99 | 16   |
 | Reverb MOD      | rotary knob       | 100 | 16   |
-| EQ ON/OFF       | toggle button     | 101 | 16   |
-| EQ LOW Gain     | vertical fader    | 102 | 16   |
-| EQ LO-MID Gain  | vertical fader    | 103 | 16   |
-| EQ HI-MID Gain  | vertical fader    | 104 | 16   |
-| EQ HIGH Gain    | vertical fader    | 105 | 16   |
-| EQ LOW Freq     | rotary knob       | 106 | 16   |
-| EQ LO-MID Freq  | rotary knob       | 107 | 16   |
-| EQ HI-MID Freq  | rotary knob       | 108 | 16   |
-| EQ HIGH Freq    | rotary knob       | 109 | 16   |
-| EQ LOW Q        | rotary knob       | 111 | 16   |
-| EQ LO-MID Q     | rotary knob       | 112 | 16   |
-| EQ HI-MID Q     | rotary knob       | 113 | 16   |
-| EQ HIGH Q       | rotary knob       | 114 | 16   |
+| EQ BYPASS       | toggle button     | 101 | 16   |
+| EQ Low Shelf Gain  | vertical fader | 102 | 16   |
+| EQ Peak 1 Gain     | vertical fader | 103 | 16   |
+| EQ Peak 2 Gain     | vertical fader | 104 | 16   |
+| EQ High Shelf Gain | vertical fader | 105 | 16   |
+| EQ Master Gain     | vertical fader | 115 | 16   |
+| EQ Low Shelf Freq  | rotary knob    | 106 | 16   |
+| EQ Peak 1 Freq     | rotary knob    | 107 | 16   |
+| EQ Peak 2 Freq     | rotary knob    | 108 | 16   |
+| EQ High Shelf Freq | rotary knob    | 109 | 16   |
+| EQ Low Shelf Q     | rotary knob    | 111 | 16   |
+| EQ Peak 1 Q        | rotary knob    | 112 | 16   |
+| EQ Peak 2 Q        | rotary knob    | 113 | 16   |
+| EQ High Shelf Q    | rotary knob    | 114 | 16   |
 | F1–F8 Mute (M)  | toggle button     | 50–56, 58 | 16   |
 | MASTER Mute (M) | toggle button     | 57 | 16   |
 | F1–F8 Solo (S)  | toggle button     | 70–76, 77 | 16   |
