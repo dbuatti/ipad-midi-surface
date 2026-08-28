@@ -282,6 +282,7 @@
   .knobs { display: flex; gap: 8px; flex: 0 0 auto; }
   .knob { flex: 1 1 0; display: flex; flex-direction: column; align-items: center; min-width: 0; }
   .knob-dial { position: relative; width: 72px; height: 72px; border-radius: 50%; background: radial-gradient(circle at 50% 38%, #2a3340, #12161c); border: 1px solid var(--border); box-shadow: inset 0 2px 8px rgba(0,0,0,0.6), 0 1px 3px rgba(0,0,0,0.3); touch-action: none; }
+  .knob-dial::before { content: ''; position: absolute; inset: -16px; border-radius: 50%; }
   .knob-indicator { position: absolute; left: 50%; top: 6px; width: 4px; height: 24px; background: var(--accent); border-radius: 2px; transform: translateX(-50%); box-shadow: 0 0 4px var(--accent-glow); }
   .knob-value { font-size: 17px; font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums; margin-top: 6px; min-height: 19px; }
   .knob-label { font-size: 12px; font-weight: 700; color: var(--text); margin-top: 2px; }
@@ -941,7 +942,7 @@
   };
   Fader.prototype.resend = function () { this.send(true); };
 
-  // ---- Knob (rotary / circular drag) --------------------------------
+  // ---- Knob (relative vertical drag, slow = fine, fast = coarse) -----
   function Knob(el) {
     this.el = el;
     this.cc = parseInt(el.getAttribute('data-cc'), 10);
@@ -950,7 +951,10 @@
     this.valueEl = el.querySelector('.knob-value');
     this.activePointer = null;
     this.lastSent = 0;
-    this.lastAngle = 0;
+    this.startY = 0;
+    this.startVal = 0;
+    this.lastMoveY = 0;
+    this.lastMoveTime = 0;
     var self = this;
     this.dial.addEventListener('pointerdown', function (e) { self.down(e); });
     this.dial.addEventListener('pointermove', function (e) { self.move(e); });
@@ -962,12 +966,6 @@
     this.valueEl.textContent = String(this.value);
     var deg = -135 + (this.value / 127) * 270;
     this.dial.style.transform = 'rotate(' + deg + 'deg)';
-  };
-  Knob.prototype.angleFromCenter = function (e) {
-    var rect = this.dial.getBoundingClientRect();
-    var cx = rect.left + rect.width / 2;
-    var cy = rect.top + rect.height / 2;
-    return Math.atan2(e.clientY - cy, e.clientX - cx) * 180 / Math.PI;
   };
   Knob.prototype.down = function (e) {
     e.preventDefault();
@@ -982,22 +980,30 @@
     }
     this._lastTap = now;
     try { this.dial.setPointerCapture(e.pointerId); } catch (err) {}
-    this.lastAngle = this.angleFromCenter(e);
+    this.startY = e.clientY;
+    this.startVal = this.value;
+    this.lastMoveY = e.clientY;
+    this.lastMoveTime = now;
     this.send(false);
   };
   Knob.prototype.move = function (e) {
     if (e.pointerId !== this.activePointer) return;
     e.preventDefault();
-    var angle = this.angleFromCenter(e);
-    var delta = angle - this.lastAngle;
-    // handle wraparound at ±180
-    if (delta > 180) delta -= 360;
-    if (delta < -180) delta += 360;
-    this.lastAngle = angle;
-    // 270° of rotation = full range (0-127)
-    var v = this.value + (delta / 270) * 127;
+    // Relative vertical drag: up = increase, down = decrease
+    // Sensitivity adapts: slow drags get fine control, fast drags move more
+    var now = Date.now();
+    var dy = this.lastMoveY - e.clientY; // up = positive
+    var dt = now - this.lastMoveTime;
+    // Base sensitivity: 300px = full range. Slow drags get 2x finer.
+    var speed = Math.abs(dy) / Math.max(dt, 1); // px per ms
+    var sensitivity = 300; // px for full range
+    if (speed < 0.3) sensitivity = 600; // slow drag = fine control (2x finer)
+    var delta = (dy / sensitivity) * 127;
+    var v = this.value + delta;
     if (v < 0) v = 0; if (v > 127) v = 127;
     this.value = Math.round(v);
+    this.lastMoveY = e.clientY;
+    this.lastMoveTime = now;
     this.render();
     this.send(false);
   };
