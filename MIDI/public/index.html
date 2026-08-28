@@ -67,15 +67,16 @@
     background: #222; flex: 0 0 auto;
   }
   #midiBlink.active { background: var(--accent); box-shadow: 0 0 8px var(--accent-glow); }
-  .scene-pills { display: flex; gap: 4px; margin-left: 8px; }
+  .scene-pills { display: flex; gap: 6px; align-items: center; flex: 0 0 auto; }
+  .scene-pills-label { font-size: 10px; font-weight: 800; letter-spacing: 2px; color: var(--text-dim); margin-right: 2px; }
   .scene-pill {
-    width: 28px; height: 28px; border-radius: 14px;
+    width: 40px; height: 40px; border-radius: 20px;
     background: var(--btn-bg); color: var(--text-dim);
-    border: 1px solid var(--border); font-size: 12px; font-weight: 800;
+    border: 1px solid var(--border); font-size: 16px; font-weight: 800;
     touch-action: none; display: flex; align-items: center; justify-content: center;
     transition: background .12s, color .12s, border-color .12s;
   }
-  .scene-pill.stored { color: var(--accent); border-color: var(--accent-dim); }
+  .scene-pill.stored { color: var(--accent); border-color: var(--accent-dim); background: #0a2a30; }
   .scene-pill.stored:active { background: var(--accent-dim); }
   .scene-pill.saving { background: var(--accent); color: #000; animation: pulse 0.5s infinite; }
   #ipBar {
@@ -412,7 +413,9 @@
     <span class="dot"></span>
     <span class="label">Connecting…</span>
     <span id="midiBlink"></span>
+    <div class="spacer" style="flex:1 1 auto;"></div>
     <div class="scene-pills">
+      <span class="scene-pills-label">SCENE</span>
       <button class="scene-pill" type="button" data-scene="0">1</button>
       <button class="scene-pill" type="button" data-scene="1">2</button>
       <button class="scene-pill" type="button" data-scene="2">3</button>
