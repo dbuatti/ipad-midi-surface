@@ -148,11 +148,12 @@ no Safari toolbars and the screen stays awake.
 | Reverb DIFF     | rotary knob       | 99 | 16   |
 | Reverb MOD      | rotary knob       | 100 | 16   |
 | EQ BYPASS       | toggle button     | 101 | 16   |
-| EQ Low Shelf Gain  | vertical fader | 102 | 16   |
-| EQ Peak 1 Gain     | vertical fader | 103 | 16   |
-| EQ Peak 2 Gain     | vertical fader | 104 | 16   |
-| EQ High Shelf Gain | vertical fader | 105 | 16   |
-| EQ Master Gain     | vertical fader | 115 | 16   |
+| EQ Band ON/OFF  | toggle button     | 116–119 | 16   |
+| EQ Low Shelf Gain  | vertical fader (dB) | 102 | 16   |
+| EQ Peak 1 Gain     | vertical fader (dB) | 103 | 16   |
+| EQ Peak 2 Gain     | vertical fader (dB) | 104 | 16   |
+| EQ High Shelf Gain | vertical fader (dB) | 105 | 16   |
+| EQ Master Gain     | vertical fader (dB) | 115 | 16   |
 | EQ Low Shelf Freq  | rotary knob    | 106 | 16   |
 | EQ Peak 1 Freq     | rotary knob    | 107 | 16   |
 | EQ Peak 2 Freq     | rotary knob    | 108 | 16   |

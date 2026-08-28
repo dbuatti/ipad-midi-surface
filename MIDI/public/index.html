@@ -67,6 +67,17 @@
     background: #222; flex: 0 0 auto;
   }
   #midiBlink.active { background: var(--accent); box-shadow: 0 0 8px var(--accent-glow); }
+  .scene-pills { display: flex; gap: 4px; margin-left: 8px; }
+  .scene-pill {
+    width: 28px; height: 28px; border-radius: 14px;
+    background: var(--btn-bg); color: var(--text-dim);
+    border: 1px solid var(--border); font-size: 12px; font-weight: 800;
+    touch-action: none; display: flex; align-items: center; justify-content: center;
+    transition: background .12s, color .12s, border-color .12s;
+  }
+  .scene-pill.stored { color: var(--accent); border-color: var(--accent-dim); }
+  .scene-pill.stored:active { background: var(--accent-dim); }
+  .scene-pill.saving { background: var(--accent); color: #000; animation: pulse 0.5s infinite; }
   #ipBar {
     display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
     padding: 4px 14px;
@@ -349,6 +360,32 @@
   .scene-id { font-size: 10px; font-weight: 700; color: var(--text-dim); }
   .scene.stored .scene-id { color: var(--accent); }
 
+  /* ---- EQ strips ---- */
+  .eq-header { display: flex; gap: 8px; align-items: center; flex: 0 0 auto; }
+  .eq-strips { display: flex; gap: 8px; flex: 1 1 auto; min-height: 0; }
+  .eq-strip {
+    flex: 1 1 0; display: flex; flex-direction: column; align-items: center; gap: 6px;
+    background: var(--panel-light); border-radius: 12px; border: 1px solid var(--border);
+    padding: 8px 4px; min-width: 0;
+  }
+  .eq-strip .fader { flex: 1 1 auto; min-height: 0; }
+  .eq-strip .fader-track { width: 44px; border-radius: 22px; }
+  .eq-strip .fader-fill { border-radius: 0; }
+  .eq-strip .fader-handle { width: 58px; height: 24px; }
+  .eq-strip .fader-value { font-size: 14px; min-height: 16px; }
+  .eq-strip .fader-label { font-size: 9px; }
+  .eq-strip .knob-dial { width: 56px; height: 56px; }
+  .eq-strip .knob-indicator { height: 18px; top: 5px; }
+  .eq-strip .knob-value { font-size: 13px; min-height: 15px; }
+  .eq-strip .knob-label { font-size: 10px; }
+  .eq-band-on {
+    width: 100%; height: 28px; border-radius: 6px; font-size: 11px; font-weight: 800;
+    background: var(--btn-bg); color: var(--text-dim); border: 1px solid var(--border);
+    touch-action: none; letter-spacing: 1px;
+  }
+  .eq-band-on.on { background: var(--good); color: #000; border-color: var(--good); }
+  .eq-master .fader-track { height: 36px; }
+
   /* ---- Panic ---- */
   #panic {
     flex: 0 0 auto; width: 100%; min-height: 84px; border-radius: 14px;
@@ -375,6 +412,12 @@
     <span class="dot"></span>
     <span class="label">Connecting…</span>
     <span id="midiBlink"></span>
+    <div class="scene-pills">
+      <button class="scene-pill" type="button" data-scene="0">1</button>
+      <button class="scene-pill" type="button" data-scene="1">2</button>
+      <button class="scene-pill" type="button" data-scene="2">3</button>
+      <button class="scene-pill" type="button" data-scene="3">4</button>
+    </div>
     <button id="panicTop" type="button">PANIC</button>
     <button id="allUp" type="button">FADERS 100%</button>
     <button id="reset" type="button">RESET</button>
@@ -430,13 +473,6 @@
               <div class="quad-pointer"></div>
             </div>
             <div class="quad-label">Pitch springs to center · Mod holds</div>
-          </div>
-          <div class="section-title">Scenes — long-press to save, tap to recall</div>
-          <div class="scenes">
-            <button class="scene" type="button" data-scene="0"><span class="scene-name">—</span><span class="scene-id">1</span></button>
-            <button class="scene" type="button" data-scene="1"><span class="scene-name">—</span><span class="scene-id">2</span></button>
-            <button class="scene" type="button" data-scene="2"><span class="scene-name">—</span><span class="scene-id">3</span></button>
-            <button class="scene" type="button" data-scene="3"><span class="scene-name">—</span><span class="scene-id">4</span></button>
           </div>
         </section>
 
@@ -538,35 +574,42 @@
 
         <!-- SCREEN 4: EQ -->
         <section class="screen" id="screen-eq">
-          <div class="section-title">Channel EQ — Bypass + 4 bands + Master Gain</div>
-          <div class="mute-all-row">
-            <div class="btn btn-toggle eq-power" data-cc="101" data-toggle="1" style="min-height:48px;font-size:16px;flex:1 1 0;">
+          <div class="eq-header">
+            <div class="btn btn-toggle eq-power" data-cc="101" data-toggle="1" style="min-height:36px;font-size:13px;flex:0 0 auto;padding:0 16px;">
               <span class="btn-cap">BYPASS</span>
               <span class="btn-state">OFF</span>
             </div>
-            <button class="mute-all-btn" type="button" id="eqReset" style="flex:0 0 auto;padding:0 20px;color:var(--accent);">EQ RESET</button>
+            <div class="fader eq-master" data-cc="115" style="flex:0 0 60px;flex-direction:row;gap:6px;align-items:center;padding:4px 8px;">
+              <div class="fader-track eq-track" style="width:16px;height:32px;border-radius:8px;flex:0 0 auto;"><div class="fader-fill"></div><div class="fader-handle" style="width:28px;height:14px;"></div></div>
+              <div style="display:flex;flex-direction:column;font-size:9px;line-height:1.2;"><span class="fader-value" style="font-size:12px;">0.0</span><span class="fader-label" style="font-size:9px;margin:0;">MASTER</span></div>
+            </div>
+            <button class="mute-all-btn" type="button" id="eqFlat" style="flex:0 0 auto;padding:0 18px;color:var(--accent);">FLAT</button>
           </div>
-          <div class="section-title">Band Gain (boost / cut)</div>
-          <div class="faders" style="flex:1 1 auto;min-height:0;">
-            <div class="fader" data-cc="102"><div class="fader-value">0%</div><div class="fader-track eq-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">LOW SHELF</div></div>
-            <div class="fader" data-cc="103"><div class="fader-value">0%</div><div class="fader-track eq-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">PEAK 1</div></div>
-            <div class="fader" data-cc="104"><div class="fader-value">0%</div><div class="fader-track eq-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">PEAK 2</div></div>
-            <div class="fader" data-cc="105"><div class="fader-value">0%</div><div class="fader-track eq-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">HIGH SHELF</div></div>
-            <div class="fader" data-cc="115"><div class="fader-value">0%</div><div class="fader-track eq-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">MASTER GAIN</div></div>
-          </div>
-          <div class="section-title">Frequency</div>
-          <div class="knobs">
-            <div class="knob" data-cc="106"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">LS FREQ</div></div>
-            <div class="knob" data-cc="107"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">PK1 FREQ</div></div>
-            <div class="knob" data-cc="108"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">PK2 FREQ</div></div>
-            <div class="knob" data-cc="109"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">HS FREQ</div></div>
-          </div>
-          <div class="section-title">Q-Factor</div>
-          <div class="knobs">
-            <div class="knob" data-cc="111"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">LS Q</div></div>
-            <div class="knob" data-cc="112"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">PK1 Q</div></div>
-            <div class="knob" data-cc="113"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">PK2 Q</div></div>
-            <div class="knob" data-cc="114"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">HS Q</div></div>
+          <div class="eq-strips">
+            <div class="eq-strip">
+              <button class="eq-band-on ms" type="button" data-cc="116" data-toggle="1">ON</button>
+              <div class="fader" data-cc="102"><div class="fader-value">0.0</div><div class="fader-track eq-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">LOW SHELF</div></div>
+              <div class="knob" data-cc="106"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">FREQ</div></div>
+              <div class="knob" data-cc="111"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">Q</div></div>
+            </div>
+            <div class="eq-strip">
+              <button class="eq-band-on ms" type="button" data-cc="117" data-toggle="1">ON</button>
+              <div class="fader" data-cc="103"><div class="fader-value">0.0</div><div class="fader-track eq-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">PEAK 1</div></div>
+              <div class="knob" data-cc="107"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">FREQ</div></div>
+              <div class="knob" data-cc="112"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">Q</div></div>
+            </div>
+            <div class="eq-strip">
+              <button class="eq-band-on ms" type="button" data-cc="118" data-toggle="1">ON</button>
+              <div class="fader" data-cc="104"><div class="fader-value">0.0</div><div class="fader-track eq-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">PEAK 2</div></div>
+              <div class="knob" data-cc="108"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">FREQ</div></div>
+              <div class="knob" data-cc="113"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">Q</div></div>
+            </div>
+            <div class="eq-strip">
+              <button class="eq-band-on ms" type="button" data-cc="119" data-toggle="1">ON</button>
+              <div class="fader" data-cc="105"><div class="fader-value">0.0</div><div class="fader-track eq-track"><div class="fader-fill"></div><div class="fader-handle"></div></div><div class="fader-label">HIGH SHELF</div></div>
+              <div class="knob" data-cc="109"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">FREQ</div></div>
+              <div class="knob" data-cc="114"><div class="knob-dial"><div class="knob-indicator"></div></div><div class="knob-value">0</div><div class="knob-label">Q</div></div>
+            </div>
           </div>
         </section>
     </div>
@@ -814,9 +857,25 @@
   }
   Fader.prototype.render = function () {
     var pct = (this.value / 127) * 100;
-    this.fill.style.height = pct + '%';
-    this.handle.style.bottom = pct + '%';
-    this.valueEl.textContent = Math.round(pct) + '%';
+    if (this.isEq) {
+      // EQ: fill from center (50%) outward, display in dB
+      var centerPct = 50;
+      if (pct >= centerPct) {
+        this.fill.style.bottom = centerPct + '%';
+        this.fill.style.height = (pct - centerPct) + '%';
+      } else {
+        this.fill.style.bottom = pct + '%';
+        this.fill.style.height = (centerPct - pct) + '%';
+      }
+      this.handle.style.bottom = pct + '%';
+      var db = ((this.value - 64) / 63) * 24;
+      this.valueEl.textContent = (db > 0 ? '+' : '') + db.toFixed(1);
+    } else {
+      this.fill.style.height = pct + '%';
+      this.fill.style.bottom = '0';
+      this.handle.style.bottom = pct + '%';
+      this.valueEl.textContent = Math.round(pct) + '%';
+    }
   };
   Fader.prototype.valueFromEvent = function (e) {
     var rect = this.track.getBoundingClientRect();
@@ -1206,14 +1265,14 @@
     }
   });
 
-  // ---- EQ Reset (all EQ faders to 50%, all EQ knobs to 0) -------------
-  var eqResetEl = document.getElementById('eqReset');
-  eqResetEl.addEventListener('pointerdown', function (e) {
+  // ---- EQ Flat (all gains to 0dB, all freq/Q to default) -------------
+  var eqFlatEl = document.getElementById('eqFlat');
+  eqFlatEl.addEventListener('pointerdown', function (e) {
     e.preventDefault(); haptic(20);
-    eqResetEl.classList.add('active');
+    eqFlatEl.classList.add('active');
     for (var f = 0; f < faders.length; f++) {
       if (faders[f].cc >= 102 && faders[f].cc <= 115) {
-        var target = (faders[f].cc === 115) ? 64 : 64; // all EQ gains flat at 50%
+        var target = 64; // 0dB flat
         faders[f].value = target; faders[f].render(); persist('cc:' + faders[f].cc, target); faders[f].send(true);
       }
     }
@@ -1222,7 +1281,7 @@
         knobs[n].value = 0; knobs[n].render(); persist('cc:' + knobs[n].cc, 0); knobs[n].send(true);
       }
     }
-    setTimeout(function () { eqResetEl.classList.remove('active'); }, 200);
+    setTimeout(function () { eqFlatEl.classList.remove('active'); }, 200);
   });
 
   // ---- Panic (big PATCH button + global status-bar button) -----------
@@ -1345,15 +1404,14 @@
     haptic(25);
   }
   function refreshSceneButtons() {
-    var els = document.querySelectorAll('.scene');
+    var els = document.querySelectorAll('.scene-pill');
     for (var i = 0; i < els.length; i++) {
       var data = loadVal(SCENE_KEYS[i], null);
-      var nameEl = els[i].querySelector('.scene-name');
-      if (data) { els[i].classList.add('stored'); nameEl.textContent = data.name || ('Scene ' + (i + 1)); }
-      else { els[i].classList.remove('stored'); nameEl.textContent = '—'; }
+      if (data) { els[i].classList.add('stored'); }
+      else { els[i].classList.remove('stored'); }
     }
   }
-  var sceneEls = document.querySelectorAll('.scene');
+  var sceneEls = document.querySelectorAll('.scene-pill');
   for (var si = 0; si < sceneEls.length; si++) {
       (function (el, idx) {
         var saveTimer = null;
@@ -1363,8 +1421,7 @@
           el._pressed = true;
           saveTimer = setTimeout(function () {
             var state = captureState();
-            var name = 'Scene ' + (idx + 1);
-            persist(SCENE_KEYS[idx], { name: name, state: state });
+            persist(SCENE_KEYS[idx], { name: 'Scene ' + (idx + 1), state: state });
             el.classList.add('saving');
             haptic(30);
             setTimeout(function () { el.classList.remove('saving'); refreshSceneButtons(); }, 600);
@@ -1420,7 +1477,7 @@
   // Swipe: only from empty/section-title areas, never from a control
   var sx = 0, sy = 0, swiping = false;
   function isControlTarget(t) {
-    return !!(t.closest && t.closest('.fader-track,.knob-dial,.quad-pad,.wheel-track,.btn,.ms,.patchpad,.scene,.mute-all-btn,#panic,#panicTop,#reset,#allUp,#eqReset,#lockOverlay,.tab'));
+    return !!(t.closest && t.closest('.fader-track,.knob-dial,.quad-pad,.wheel-track,.btn,.ms,.patchpad,.scene-pill,.mute-all-btn,.eq-band-on,#panic,#panicTop,#reset,#allUp,#eqFlat,#lockOverlay,.tab'));
   }
   pagerEl.addEventListener('touchstart', function (e) {
     var t = e.target;
